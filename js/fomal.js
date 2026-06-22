@@ -3204,14 +3204,20 @@ let unsplash = "url(https://source.unsplash.com/random/1920x1080/)";
 
 
 // 更换背景(自己的代码)
-if (localStorage.getItem("blogbg") != undefined) {
-  setBg(localStorage.getItem("blogbg"));
+const defaultBlogBg = "url(/assets/post-01.jpg)";
+const darkModeBlogBg = "url(/assets/post-02.jpg)";
+const mobileDayBlogBg = "url(/assets/bg.jpg)";
+const mobileNightBlogBg = "url(/assets/avatar.jpg)";
+const savedBlogBg = localStorage.getItem("blogbg");
+if (savedBlogBg && !/u7u7\.top|wallhaven|blognoteImg/i.test(savedBlogBg)) {
+  setBg(savedBlogBg);
 } else {
+  localStorage.setItem("blogbg", defaultBlogBg);
   document.getElementById("defineBg").innerText = `:root{
-    --default-bg: url(https://img.u7u7.top/blognoteImg/20260604192526136.png);
-    --darkmode-bg:url(https://img.u7u7.top/blogbackground/wallhaven-3lo9v3.webp);
-    --mobileday-bg: url(https://img.u7u7.top/blogbackground/wallhaven-wq9glp.webp);
-    --mobilenight-bg: url(https://img.u7u7.top/blogbackground/wallhaven-6o8ekw.webp);
+    --default-bg: ${defaultBlogBg};
+    --darkmode-bg:${darkModeBlogBg};
+    --mobileday-bg: ${mobileDayBlogBg};
+    --mobilenight-bg: ${mobileNightBlogBg};
   }`;
 }
 // 切换背景主函数
