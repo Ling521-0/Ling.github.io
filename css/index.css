@@ -5098,7 +5098,7 @@ mjx-container[display],
   border-radius: 5px !important;
 }
 [data-theme="dark"] #web_bg {
-  background: url(https://img.u7u7.top/blogbackground/wallhaven-3lo9v3.webp);;
+  background: url(/assets/post-01.jpg);;
   background-attachment: local;
   background-position: center;
   background-size: cover;
@@ -5106,14 +5106,14 @@ mjx-container[display],
 }
 @media screen and (max-width: 800px) {
   #web_bg {
-    background: url(https://img.u7u7.top/blogbackground/wallhaven-gpgwde.webp);;
+    background: url(/assets/post-01.jpg);;
     background-attachment: local !important;
     background-position: center !important;
     background-size: cover !important;
     background-repeat: no-repeat !important;
   }
   [data-theme="dark"] #web_bg {
-    background: url(https://img.u7u7.top/blogbackground/wallhaven-7pkv19.webp);;
+    background: url(/assets/post-01.jpg);;
     background-attachment: local !important;
     background-position: center !important;
     background-size: cover !important;
