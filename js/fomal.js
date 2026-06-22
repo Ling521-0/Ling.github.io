@@ -3208,18 +3208,13 @@ const defaultBlogBg = "url(/assets/post-01.jpg)";
 const darkModeBlogBg = "url(/assets/post-02.jpg)";
 const mobileDayBlogBg = "url(/assets/bg.jpg)";
 const mobileNightBlogBg = "url(/assets/avatar.jpg)";
-const savedBlogBg = localStorage.getItem("blogbg");
-if (savedBlogBg && !/u7u7\.top|wallhaven|blognoteImg/i.test(savedBlogBg)) {
-  setBg(savedBlogBg);
-} else {
-  localStorage.setItem("blogbg", defaultBlogBg);
-  document.getElementById("defineBg").innerText = `:root{
-    --default-bg: ${defaultBlogBg};
-    --darkmode-bg:${darkModeBlogBg};
-    --mobileday-bg: ${mobileDayBlogBg};
-    --mobilenight-bg: ${mobileNightBlogBg};
-  }`;
-}
+localStorage.setItem("blogbg", defaultBlogBg);
+document.getElementById("defineBg").innerText = `:root{
+  --default-bg: ${defaultBlogBg};
+  --darkmode-bg:${darkModeBlogBg};
+  --mobileday-bg: ${mobileDayBlogBg};
+  --mobilenight-bg: ${mobileNightBlogBg};
+}`;
 // 切换背景主函数
 function changeBg(s) {
   // 自定义颜色框
