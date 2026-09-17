@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://xingandling.top/life/books/index.html</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/life/games/index.html</loc>
+    
+    <lastmod>2026-09-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://xingandling.top/data/fcircle.json</loc>
     
     <lastmod>2026-09-17</lastmod>
@@ -48,15 +66,6 @@
   
   <url>
     <loc>https://xingandling.top/life/music/index.html</loc>
-    
-    <lastmod>2026-09-17</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/life/games/index.html</loc>
     
     <lastmod>2026-09-17</lastmod>
     
@@ -281,15 +290,6 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/posts/634d7da2.html</loc>
-    
-    <lastmod>2026-06-22</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://xingandling.top/posts/5c2fafc7.html</loc>
     
     <lastmod>2026-06-22</lastmod>
@@ -299,7 +299,7 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/posts/666d7da5.html</loc>
+    <loc>https://xingandling.top/posts/634d7da2.html</loc>
     
     <lastmod>2026-06-22</lastmod>
     
@@ -309,6 +309,15 @@
   
   <url>
     <loc>https://xingandling.top/posts/634d7da5.html</loc>
+    
+    <lastmod>2026-06-22</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/posts/666d7da5.html</loc>
     
     <lastmod>2026-06-22</lastmod>
     
@@ -344,34 +353,6 @@
 
   
   <url>
-    <loc>https://xingandling.top/tags/%E9%9D%A2%E7%BB%8F/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/C/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/Redis/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/RPC/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://xingandling.top/tags/Agent/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -400,6 +381,62 @@
   </url>
   
   <url>
+    <loc>https://xingandling.top/tags/%E9%9D%A2%E7%BB%8F/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/Python/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/%E7%B1%B3%E5%93%88%E6%B8%B8/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/C/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/%E6%B8%B8%E6%88%8F%E6%B5%8B%E8%AF%95/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/%E9%B9%B0%E8%A7%92/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/Redis/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/RPC/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://xingandling.top/tags/%E5%BC%80%E6%BA%90/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -421,28 +458,21 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/tags/Python/</loc>
+    <loc>https://xingandling.top/tags/%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://xingandling.top/tags/%E7%B1%B3%E5%93%88%E6%B8%B8/</loc>
+    <loc>https://xingandling.top/tags/%E5%B7%A5%E7%A7%91%E7%94%9F/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://xingandling.top/tags/%E6%B8%B8%E6%88%8F%E6%B5%8B%E8%AF%95/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E9%B9%B0%E8%A7%92/</loc>
+    <loc>https://xingandling.top/tags/%E6%96%B9%E6%B3%95%E8%AE%BA/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -485,27 +515,6 @@
   
   <url>
     <loc>https://xingandling.top/tags/B%E7%AB%99/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E5%AD%A6%E4%B9%A0/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E5%B7%A5%E7%A7%91%E7%94%9F/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E6%96%B9%E6%B3%95%E8%AE%BA/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -582,41 +591,6 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/tags/%E5%8F%8B%E6%83%85/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E5%BF%83%E6%83%85/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E8%AE%B0%E5%BD%95/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E8%AF%BB%E4%B9%A6/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/tags/%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://xingandling.top/tags/%E7%AE%80%E5%8E%86/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -672,14 +646,42 @@
     <priority>0.2</priority>
   </url>
   
-
-  
   <url>
-    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/</loc>
+    <loc>https://xingandling.top/tags/%E8%AF%BB%E4%B9%A6/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/%E9%9A%8F%E7%AC%94/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/%E5%8F%8B%E6%83%85/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/%E5%BF%83%E6%83%85/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/tags/%E8%AE%B0%E5%BD%95/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+
   
   <url>
     <loc>https://xingandling.top/categories/%E6%8A%80%E6%9C%AF/</loc>
@@ -689,21 +691,7 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/%E6%B8%B8%E6%88%8F%E6%B5%8B%E8%AF%95/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/categories/%E5%88%9B%E4%BD%9C/</loc>
+    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -717,7 +705,7 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/</loc>
+    <loc>https://xingandling.top/categories/%E6%8A%80%E6%9C%AF/%E5%BC%80%E6%BA%90%E5%8D%8F%E4%BD%9C/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -731,7 +719,21 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/categories/%E6%8A%80%E6%9C%AF/%E5%BC%80%E6%BA%90%E5%8D%8F%E4%BD%9C/</loc>
+    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/%E6%B8%B8%E6%88%8F%E6%B5%8B%E8%AF%95/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/categories/%E5%88%9B%E4%BD%9C/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -752,6 +754,27 @@
   </url>
   
   <url>
+    <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/categories/%E9%9A%8F%E7%AC%94/%E6%88%90%E9%95%BF%E6%80%9D%E8%80%83/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://xingandling.top/categories/%E5%88%9B%E4%BD%9C/%E5%8E%9F%E5%88%9B%E5%B0%8F%E8%AF%B4/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://xingandling.top/categories/%E6%B1%82%E8%81%8C/%E8%81%8C%E4%B8%9A%E8%A7%82%E5%AF%9F/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -766,14 +789,7 @@
   </url>
   
   <url>
-    <loc>https://xingandling.top/categories/%E5%88%9B%E4%BD%9C/%E5%8E%9F%E5%88%9B%E5%B0%8F%E8%AF%B4/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/categories/%E9%9A%8F%E7%AC%94/%E6%88%90%E9%95%BF%E6%80%9D%E8%80%83/</loc>
+    <loc>https://xingandling.top/categories/%E5%88%9B%E4%BD%9C/%E8%AF%BB%E4%B9%A6%E9%9A%8F%E7%AC%94/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -781,13 +797,6 @@
   
   <url>
     <loc>https://xingandling.top/categories/%E9%9A%8F%E7%AC%94/%E4%B8%AA%E4%BA%BA%E8%AE%B0%E5%BD%95/</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://xingandling.top/categories/%E5%88%9B%E4%BD%9C/%E8%AF%BB%E4%B9%A6%E9%9A%8F%E7%AC%94/</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>

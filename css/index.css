@@ -9023,7 +9023,8 @@ span.card-clock-weather {
   background: #18191e;
 }
 
-.game-now-item--pgr {
+.game-now-item--pgr,
+.game-now-item--wuwa {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
   gap: 24px;
@@ -9031,7 +9032,8 @@ span.card-clock-weather {
   overflow: hidden;
 }
 
-.game-now-item--pgr > div:last-child {
+.game-now-item--pgr > div:last-child,
+.game-now-item--wuwa > div:last-child {
   padding: 28px 28px 28px 0;
 }
 
@@ -9044,6 +9046,10 @@ span.card-clock-weather {
   height: 100%;
   object-fit: cover;
   object-position: 72% center;
+}
+
+.game-now-item--wuwa .game-now-item__portrait img {
+  object-position: 17% center;
 }
 
 .game-now-item__status {
@@ -9133,12 +9139,14 @@ span.card-clock-weather {
     object-position: center 30%;
   }
 
-  .game-now-item--pgr {
+  .game-now-item--pgr,
+  .game-now-item--wuwa {
     grid-template-columns: 88px minmax(0, 1fr);
     gap: 16px;
   }
 
-  .game-now-item--pgr > div:last-child {
+  .game-now-item--pgr > div:last-child,
+  .game-now-item--wuwa > div:last-child {
     padding: 22px 16px 22px 0;
   }
 }
@@ -10436,6 +10444,199 @@ hr:before {
 
   .fcircle-feed {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 小说书架 */
+.reading-shelf {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 10px 0 36px;
+}
+
+.reading-shelf__header {
+  padding: 28px 0 22px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.reading-shelf__eyebrow {
+  margin: 0 0 8px;
+  color: #ca694a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.reading-shelf__header h1 {
+  margin: 0;
+  color: var(--font-color);
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.reading-shelf__header > p:last-child {
+  margin: 10px 0 0;
+  color: var(--font-color);
+  opacity: 0.72;
+}
+
+.reading-shelf__list {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.book-card {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  min-height: 280px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  box-shadow: var(--card-box-shadow);
+}
+
+.book-card__cover {
+  display: block;
+  overflow: hidden;
+  background: #22262e;
+}
+
+.book-card__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.28s ease;
+}
+
+.book-card:hover .book-card__cover img {
+  transform: scale(1.035);
+}
+
+.book-card__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 26px 28px 24px;
+}
+
+.book-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--font-color);
+  font-size: 0.78rem;
+  opacity: 0.68;
+}
+
+.book-card__meta span + span::before {
+  margin-right: 10px;
+  content: '·';
+}
+
+.book-card h2 {
+  margin: 10px 0 0;
+  color: var(--font-color);
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.book-card__intro {
+  margin: 12px 0 0;
+  color: var(--font-color);
+  font-size: 0.94rem;
+  line-height: 1.85;
+  opacity: 0.8;
+}
+
+.book-card__review {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 3px solid #ca694a;
+  background: rgba(202, 105, 74, 0.08);
+}
+
+.book-card--mirror .book-card__review {
+  border-left-color: #4b8daa;
+  background: rgba(75, 141, 170, 0.08);
+}
+
+.book-card--gu .book-card__review {
+  border-left-color: #806c9e;
+  background: rgba(128, 108, 158, 0.1);
+}
+
+.book-card__review span {
+  color: #ca694a;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.book-card--mirror .book-card__review span {
+  color: #4b8daa;
+}
+
+.book-card--gu .book-card__review span {
+  color: #806c9e;
+}
+
+.book-card__review p {
+  margin: 4px 0 0;
+  color: var(--font-color);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  opacity: 0.78;
+}
+
+.book-card__source {
+  align-self: flex-start;
+  margin-top: auto;
+  padding-top: 16px;
+  color: var(--theme-color);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.book-card__source::after {
+  margin-left: 6px;
+  content: '→';
+}
+
+@media screen and (max-width: 600px) {
+  .reading-shelf {
+    padding-top: 0;
+  }
+
+  .reading-shelf__header {
+    padding-top: 8px;
+  }
+
+  .book-card {
+    grid-template-columns: 108px minmax(0, 1fr);
+    min-height: 230px;
+  }
+
+  .book-card__content {
+    padding: 18px 18px 16px;
+  }
+
+  .book-card h2 {
+    font-size: 1.2rem;
+  }
+
+  .book-card__intro {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.86rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+
+  .book-card__review {
+    display: none;
   }
 }
 
