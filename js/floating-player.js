@@ -30,7 +30,10 @@
     const saved = loadSavedState();
     const player = document.createElement('aside');
     player.id = PLAYER_ID;
-    player.className = `floating-music-player${saved.collapsed ? ' is-collapsed' : ''}`;
+    const collapsed = typeof saved.collapsed === 'boolean'
+      ? saved.collapsed
+      : window.innerWidth <= 600;
+    player.className = `floating-music-player${collapsed ? ' is-collapsed' : ''}`;
     player.setAttribute('aria-label', '悬浮音乐播放器');
     player.style.setProperty('--player-cover', `url("${track.cover}")`);
     player.innerHTML = `

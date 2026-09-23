@@ -6404,6 +6404,21 @@ blockquote.pullquote.right {
   --hl-bg: #282c34;
 }
 
+#waline-wrap .waline-retry {
+  display: block;
+  margin: 1rem auto;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--theme-color);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--font-color);
+  cursor: pointer;
+}
+
+#waline-wrap .waline-retry:hover {
+  color: var(--theme-color);
+}
+
 /* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
