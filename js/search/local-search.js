@@ -1,7 +1,12 @@
-window.addEventListener('load', () => {
+;(() => {
   let loadFlag = false
   let dataObj = []
   const $searchMask = document.getElementById('search-mask')
+  const loadData = () => fetchData(GLOBAL_CONFIG.localSearch.path).catch(() => {
+    const status = document.getElementById('loading-database')
+    if (status) status.textContent = '搜索数据加载失败，请刷新页面重试'
+    return []
+  })
 
   const openSearch = () => {
     const bodyStyle = document.body.style
@@ -38,7 +43,7 @@ window.addEventListener('load', () => {
   const searchClickFnOnce = () => {
     document.querySelector('#local-search .search-close-button').addEventListener('click', closeSearch)
     $searchMask.addEventListener('click', closeSearch)
-    if (GLOBAL_CONFIG.localSearch.preload) dataObj = fetchData(GLOBAL_CONFIG.localSearch.path)
+    if (GLOBAL_CONFIG.localSearch.preload) dataObj = loadData()
   }
 
   // check url is json or not
@@ -50,6 +55,7 @@ window.addEventListener('load', () => {
   const fetchData = async (path) => {
     let data = []
     const response = await fetch(path)
+    if (!response.ok) throw new Error(`搜索索引请求失败：${response.status}`)
     if (isJson(path)) {
       data = await response.json()
     } else {
@@ -64,17 +70,15 @@ window.addEventListener('load', () => {
         }
       })
     }
-    if (response.ok) {
-      const $loadDataItem = document.getElementById('loading-database')
-      $loadDataItem.nextElementSibling.style.display = 'block'
-      $loadDataItem.remove()
-    }
+    const $loadDataItem = document.getElementById('loading-database')
+    $loadDataItem.nextElementSibling.style.display = 'block'
+    $loadDataItem.remove()
     return data
   }
 
   const search = () => {
     if (!GLOBAL_CONFIG.localSearch.preload) {
-      dataObj = fetchData(GLOBAL_CONFIG.localSearch.path)
+      dataObj = loadData()
     }
 
     const $input = document.querySelector('#local-search-input input')
@@ -185,4 +189,4 @@ window.addEventListener('load', () => {
     !btf.isHidden($searchMask) && closeSearch()
     searchClickFn()
   })
-})
+})()

@@ -238,7 +238,7 @@ const btf = {
         }
       })
 
-      if (!window.fancyboxRun) {
+      if (!window.fancyboxRun && window.Fancybox) {
         Fancybox.bind('[data-fancybox]', {
           Hash: false,
           Thumbs: {

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+;(() => {
   let blogNameWidth, menusWidth, searchWidth, $nav
   let mobileSidebarOpen = false
 
@@ -49,6 +49,15 @@ document.addEventListener('DOMContentLoaded', function () {
       mobileSidebarOpen = false
     }
   }
+  const boundToggleMenus = new WeakSet()
+  const bindMobileMenu = () => {
+    const toggleMenu = document.getElementById('toggle-menu')
+    if (toggleMenu && !boundToggleMenus.has(toggleMenu)) {
+      toggleMenu.addEventListener('click', sidebarFn.open)
+      boundToggleMenus.add(toggleMenu)
+    }
+  }
+  bindMobileMenu()
 
   /**
    * 首頁top_img底下的箭頭
@@ -225,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const runLightbox = () => {
     btf.loadLightbox(document.querySelectorAll('#article-container img:not(.no-lightbox)'))
   }
+  window.refreshLightbox = runLightbox
 
   /**
    * justified-gallery 圖庫排版
@@ -739,11 +749,12 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('menu-mask').addEventListener('click', e => { sidebarFn.close() })
 
     clickFnOfSubMenu()
-    GLOBAL_CONFIG.islazyload && lazyloadImg()
+    GLOBAL_CONFIG.islazyload && typeof window.LazyLoad === 'function' && lazyloadImg()
     GLOBAL_CONFIG.copyright !== undefined && addCopyright()
   }
 
   window.refreshFn = function () {
+    bindMobileMenu()
     initAdjust()
 
     if (GLOBAL_CONFIG_SITE.isPost) {
@@ -771,9 +782,8 @@ document.addEventListener('DOMContentLoaded', function () {
     tabsFn.clickFnOfTabs()
     tabsFn.backToTop()
     switchComments()
-    document.getElementById('toggle-menu').addEventListener('click', () => { sidebarFn.open() })
   }
 
-  refreshFn()
   unRefreshFn()
-})
+  refreshFn()
+})()
