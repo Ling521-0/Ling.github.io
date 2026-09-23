@@ -69,20 +69,34 @@ function scrollToTop() {
 //----------------------------------------------------------------
 
 /* 欢迎信息 start */
-//get请求
-$.ajax({
-  type: 'get',
-  url: 'https://apis.map.qq.com/ws/location/v1/ip',
-  data: {
-    //AW5BZ-OAKYS-UXYOR-6L3EK-PLMH5-MHFIT
-    key: 'AW5BZ-OAKYS-UXYOR-6L3EK-PLMH5-MHFIT',  // 这里要写你的KEY!!!
-    output: 'jsonp',
-  },
-  dataType: 'jsonp',
-  success: function (res) {
-    ipLoacation = res;
-  }
-})
+let ipLocationCache = null;
+let ipLocationRequest = null;
+
+function loadIpLocation() {
+  if (ipLocationCache) return Promise.resolve(ipLocationCache);
+  if (ipLocationRequest) return ipLocationRequest;
+
+  ipLocationRequest = new Promise(resolve => {
+    $.ajax({
+      type: 'get',
+      url: 'https://apis.map.qq.com/ws/location/v1/ip',
+      data: {
+        key: 'AW5BZ-OAKYS-UXYOR-6L3EK-PLMH5-MHFIT',
+        output: 'jsonp',
+      },
+      dataType: 'jsonp',
+      timeout: 5000,
+      success: function (res) {
+        ipLocationCache = res && res.result ? res : null;
+        resolve(ipLocationCache);
+      },
+      error: function () {
+        resolve(null);
+      }
+    });
+  });
+  return ipLocationRequest;
+}
 function getDistance(e1, n1, e2, n2) {
   const R = 6371
   const { sin, cos, asin, PI, hypot } = Math
@@ -99,14 +113,43 @@ function getDistance(e1, n1, e2, n2) {
   return Math.round(r);
 }
 
-function showWelcome() {
+function getWelcomeTime() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return "<span>上午好</span>，一日之计在于晨！";
+  if (hour >= 11 && hour < 13) return "<span>中午好</span>，该摸鱼吃午饭了。";
+  if (hour >= 13 && hour < 15) return "<span>下午好</span>，懒懒地睡个午觉吧！";
+  if (hour >= 15 && hour < 16) return "<span>三点几啦</span>，一起饮茶呀！";
+  if (hour >= 16 && hour < 19) return "<span>夕阳无限好！</span>";
+  if (hour >= 19 && hour < 24) return "<span>晚上好</span>，夜生活嗨起来！";
+  return "夜深了，早点休息，少熬夜。";
+}
 
-  let dist = getDistance(115.64, 37.14, ipLoacation.result.location.lng, ipLoacation.result.location.lat); // 河北邢台南宫市段芦头镇附近
-  let pos = ipLoacation.result.ad_info.nation;
-  let ip;
+function escapeWelcomeText(value) {
+  const element = document.createElement('span');
+  element.textContent = String(value == null ? '' : value);
+  return element.innerHTML;
+}
+
+async function showWelcome() {
+  const welcomeElement = document.getElementById("welcome-info");
+  if (!welcomeElement) return;
+
+  const locationResponse = await loadIpLocation();
+  const locationResult = locationResponse && locationResponse.result;
+  if (!locationResult || !locationResult.location || !locationResult.ad_info) {
+    const currentElement = document.getElementById("welcome-info");
+    if (currentElement) {
+      currentElement.innerHTML = `<b><center>🎉 欢迎信息 🎉</center>&emsp;&emsp;欢迎来到本站，${getWelcomeTime()}定位信息暂时不可用。</b>`;
+    }
+    return;
+  }
+
+  let dist = getDistance(115.64, 37.14, locationResult.location.lng, locationResult.location.lat); // 河北邢台南宫市段芦头镇附近
+  let pos = locationResult.ad_info.nation;
+  let ip = locationResult.ip || "未公开";
   let posdesc;
   //根据国家、省份、城市信息自定义欢迎语
-  switch (ipLoacation.result.ad_info.nation) {
+  switch (locationResult.ad_info.nation) {
     case "日本":
       posdesc = "よろしく，一起去看樱花吗";
       break;
@@ -132,9 +175,8 @@ function showWelcome() {
       posdesc = "拾起一片枫叶赠予你";
       break;
     case "中国":
-      pos = ipLoacation.result.ad_info.province + " " + ipLoacation.result.ad_info.city + " " + ipLoacation.result.ad_info.district;
-      ip = ipLoacation.result.ip;
-      switch (ipLoacation.result.ad_info.province) {
+      pos = locationResult.ad_info.province + " " + locationResult.ad_info.city + " " + locationResult.ad_info.district;
+      switch (locationResult.ad_info.province) {
         case "北京市":
           posdesc = "北——京——欢迎你~~~";
           break;
@@ -163,7 +205,7 @@ function showWelcome() {
           posdesc = "众所周知，中国只有两个城市。";
           break;
         case "江苏省":
-          switch (ipLoacation.result.ad_info.city) {
+          switch (locationResult.ad_info.city) {
             case "南京市":
               posdesc = "这是我挺想去的城市啦。";
               break;
@@ -179,7 +221,7 @@ function showWelcome() {
           posdesc = "东风渐绿西湖柳，雁已还人未南归。";
           break;
         case "河南省":
-          switch (ipLoacation.result.ad_info.city) {
+          switch (locationResult.ad_info.city) {
             case "郑州市":
               posdesc = "豫州之域，天地之中。";
               break;
@@ -273,65 +315,17 @@ function showWelcome() {
       break;
   }
 
-  //根据本地时间切换欢迎语
-  let timeChange;
-  let date = new Date();
-  if (date.getHours() >= 5 && date.getHours() < 11) timeChange = "<span>上午好</span>，一日之计在于晨！";
-  else if (date.getHours() >= 11 && date.getHours() < 13) timeChange = "<span>中午好</span>，该摸鱼吃午饭了。";
-  else if (date.getHours() >= 13 && date.getHours() < 15) timeChange = "<span>下午好</span>，懒懒地睡个午觉吧！";
-  else if (date.getHours() >= 15 && date.getHours() < 16) timeChange = "<span>三点几啦</span>，一起饮茶呀！";
-  else if (date.getHours() >= 16 && date.getHours() < 19) timeChange = "<span>夕阳无限好！</span>";
-  else if (date.getHours() >= 19 && date.getHours() < 24) timeChange = "<span>晚上好</span>，夜生活嗨起来！";
-  else timeChange = "夜深了，早点休息，少熬夜。";
-
-  try {
-    //自定义文本和需要放的位置
-    document.getElementById("welcome-info").innerHTML =
-      `<b><center>🎉 欢迎信息 🎉</center>&emsp;&emsp;欢迎来自 <span style="color:var(--theme-color)">${pos}</span> 的小伙伴，${timeChange}您现在距离站长约 <span style="color:var(--theme-color)">${dist}</span> 公里，当前的IP地址为： <span style="color:var(--theme-color)">${ip}</span>， ${posdesc}</b>`;
-  } catch (err) {
-    // console.log("Pjax无法获取#welcome-info元素🙄🙄🙄")
+  const currentElement = document.getElementById("welcome-info");
+  if (currentElement) {
+    currentElement.innerHTML =
+      `<b><center>🎉 欢迎信息 🎉</center>&emsp;&emsp;欢迎来自 <span style="color:var(--theme-color)">${escapeWelcomeText(pos)}</span> 的小伙伴，${getWelcomeTime()}您现在距离站长约 <span style="color:var(--theme-color)">${dist}</span> 公里，当前的IP地址为： <span style="color:var(--theme-color)">${escapeWelcomeText(ip)}</span>， ${escapeWelcomeText(posdesc)}</b>`;
   }
 }
-window.onload = showWelcome;
+window.addEventListener('load', showWelcome);
 // 如果使用了pjax在加上下面这行代码
 document.addEventListener('pjax:complete', showWelcome);
 
 /* 欢迎信息 end */
-
-//----------------------------------------------------------------
-
-/* 微博热搜 start */
-document.addEventListener('pjax:complete', getWeibo);
-document.addEventListener('DOMContentLoaded', getWeibo);
-
-function getWeibo() {
-  fetch('').then(data => data.json()).then(data => {  // 这里要写上你的API!!!
-    let html = '<style>.weibo-new{background:#ff3852}.weibo-hot{background:#ff9406}.weibo-jyzy{background:#ffc000}.weibo-recommend{background:#00b7ee}.weibo-adrecommend{background:#febd22}.weibo-friend{background:#8fc21e}.weibo-boom{background:#bd0000}.weibo-topic{background:#ff6f49}.weibo-topic-ad{background:#4dadff}.weibo-boil{background:#f86400}#weibo-container{overflow-y:auto;-ms-overflow-style:none;scrollbar-width:none}#weibo-container::-webkit-scrollbar{display:none}.weibo-list-item{display:flex;flex-direction:row;justify-content:space-between;flex-wrap:nowrap}.weibo-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:auto}.weibo-num{float:right}.weibo-hotness{display:inline-block;padding:0 6px;transform:scale(.8) translateX(-3px);color:#fff;border-radius:8px}</style>'
-    html += '<div class="weibo-list">'
-    let hotness = {
-      '爆': 'weibo-boom',
-      '热': 'weibo-hot',
-      '沸': 'weibo-boil',
-      '新': 'weibo-new',
-      '荐': 'weibo-recommend',
-      '音': 'weibo-jyzy',
-      '影': 'weibo-jyzy',
-      '剧': 'weibo-jyzy',
-      '综': 'weibo-jyzy'
-    }
-    for (let item of data) {
-      html += '<div class="weibo-list-item"><div class="weibo-hotness ' + hotness[(item.hot || '荐')] + '">' + (item.hot || '荐') + '</div>'
-        + '<span class="weibo-title"><a title="' + item.title + '"href="' + item.url + '" target="_blank" rel="external nofollow noreferrer" style="color:#a08ed5">' + item.title + '</a></span>'
-        + '<div class="weibo-num"><span>' + item.num + '</span></div></div>'
-    }
-    html += '</div>'
-    document.getElementById('weibo-container').innerHTML = html
-  }).catch(function (error) {
-    console.log(error);
-  });
-}
-
-/* 微博热搜 end */
 
 //----------------------------------------------------------------
 
@@ -2762,16 +2756,16 @@ function clearItem() {
 }
 
 
-// 设置字体
-if (localStorage.getItem("font") == undefined) {
-  localStorage.setItem("font", "HYTMR");
-}
-setFont(localStorage.getItem("font"));
+// 仅保留站点默认字体和系统字体，避免字体面板同时加载多份大字体。
+const supportedFonts = new Set(["YSHST", "default"]);
+const savedFont = localStorage.getItem("font");
+setFont(supportedFonts.has(savedFont) ? savedFont : "YSHST");
 function setFont(n) {
+  if (!supportedFonts.has(n)) n = "YSHST";
   localStorage.setItem("font", n)
   if (n == "default") {
     document.documentElement.style.setProperty('--global-font', '-apple-system');
-    document.body.style.fontFamily = "-apple-system, Consolas_1, BlinkMacSystemFont, 'Segoe UI' , 'Helvetica Neue' , Lato, Roboto, 'PingFang SC' , 'Microsoft JhengHei' , 'Microsoft YaHei' , sans-serif";
+    document.body.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI' , 'Helvetica Neue' , Lato, Roboto, 'PingFang SC' , 'Microsoft JhengHei' , 'Microsoft YaHei' , sans-serif";
   }
   else {
     document.documentElement.style.setProperty('--global-font', n);
@@ -3219,15 +3213,8 @@ function createWinbox() {
 
 
 <h2>二、字体设置</h2>
-<div class="note warning modern"><p>非商免字体未经授权只能个人使用。本站为完全非商业、非盈利性质的网站，平时用于个人学习交流，如有侵权请联系站长删除，谢谢！ —— 致版权方</p>
-</div>
 <p id="swfs">
-<a class="swf" id="swf_ZhuZiAWan" href="javascript:;" rel="noopener external nofollow" style="font-family:'ZhuZiAWan'!important;color:black" onclick="setFont('ZhuZiAWan')">筑紫A丸标准体2.0</a>
-<a class="swf" id="swf_HYTMR" href="javascript:;" rel="noopener external nofollow" style="font-family:'HYTMR'!important;color:black" onclick="setFont('HYTMR')">汉仪唐美人</a>
-<a class="swf" id="swf_LXGW" href="javascript:;" rel="noopener external nofollow" style="font-family:'LXGW'!important;color:black" onclick="setFont('LXGW')">霞鹜文楷</a>
-<a class="swf" id="swf_TTQHB" href="javascript:;" rel="noopener external nofollow" style="font-family:'TTQHB'!important;color:black" onclick="setFont('TTQHB')">甜甜圈海报</a>
 <a class="swf" id="swf_YSHST" href="javascript:;" rel="noopener external nofollow" style="font-family:'YSHST'!important;color:black" onclick="setFont('YSHST')">优设好身体</a>
-<a class="swf" id="swf_MiSans" href="javascript:;" rel="noopener external nofollow" style="font-family:'MiSans'!important;color:black" onclick="setFont('MiSans')">MiSans</a>
 <a class="swf" id="swf_default" href="javascript:;" rel="noopener external nofollow" style="font-family:-apple-system, IBM Plex Mono ,monosapce,'微软雅黑', sans-serif;!important;color:black" onclick="setFont('default')">系统默认</a>
 </p>
 

@@ -35,15 +35,14 @@
     player.style.setProperty('--player-cover', `url("${track.cover}")`);
     player.innerHTML = `
       <div class="floating-music-player__panel">
-        <div class="floating-music-player__mini">
-          <button class="floating-music-player__icon-button" type="button" data-action="expand" aria-label="展开播放器" title="展开播放器">
-            <img class="floating-music-player__mini-cover" data-mini-cover alt="">
-          </button>
-          <button class="floating-music-player__track-select" type="button" data-action="expand" aria-label="展开播放器">
-            <span class="floating-music-player__mini-title" data-mini-title></span>
-          </button>
+        <div class="floating-music-player__mini" data-action="expand" role="button" tabindex="0" aria-label="展开播放器" title="点击展开，按住空白处可拖动">
+          <img class="floating-music-player__mini-cover" data-mini-cover alt="">
+          <span class="floating-music-player__mini-title" data-mini-title></span>
           <button class="floating-music-player__icon-button" type="button" data-action="mini-play" aria-label="播放" title="播放">
             <i class="fas fa-play" aria-hidden="true"></i>
+          </button>
+          <button class="floating-music-player__icon-button" type="button" data-action="expand" aria-label="展开播放器" title="展开播放器">
+            <i class="fas fa-chevron-up" aria-hidden="true"></i>
           </button>
         </div>
         <div class="floating-music-player__top">
@@ -95,17 +94,56 @@
       duration: player.querySelector('[data-duration]'),
       progress: player.querySelector('[data-progress]'),
       volume: player.querySelector('[data-volume]'),
+      panel: player.querySelector('.floating-music-player__panel'),
+      mini: player.querySelector('.floating-music-player__mini'),
       playButtons: player.querySelectorAll('[data-action="play"], [data-action="mini-play"]')
     };
-    let previousVolume = Number(saved.volume) || 0.75;
+    const savedVolume = Number(saved.volume);
+    let previousVolume = Number.isFinite(savedVolume)
+      ? Math.min(1, Math.max(0, savedVolume))
+      : 0.75;
+    let customPosition = Number.isFinite(saved.position?.x) && Number.isFinite(saved.position?.y)
+      ? { x: saved.position.x, y: saved.position.y }
+      : null;
     audio.volume = Math.min(1, Math.max(0, previousVolume));
+    audio.muted = Boolean(saved.muted);
     elements.volume.value = audio.volume;
 
     const saveState = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         volume: audio.volume,
-        collapsed: player.classList.contains('is-collapsed')
+        muted: audio.muted,
+        collapsed: player.classList.contains('is-collapsed'),
+        position: customPosition
       }));
+    };
+
+    const applyPosition = (x, y) => {
+      const padding = 8;
+      const rect = player.getBoundingClientRect();
+      const maxX = Math.max(padding, window.innerWidth - rect.width - padding);
+      const maxY = Math.max(padding, window.innerHeight - rect.height - padding);
+      customPosition = {
+        x: Math.min(maxX, Math.max(padding, x)),
+        y: Math.min(maxY, Math.max(padding, y))
+      };
+      player.style.left = `${customPosition.x}px`;
+      player.style.top = `${customPosition.y}px`;
+      player.style.right = 'auto';
+      player.style.bottom = 'auto';
+    };
+
+    const resetPosition = () => {
+      customPosition = null;
+      player.style.removeProperty('left');
+      player.style.removeProperty('top');
+      player.style.removeProperty('right');
+      player.style.removeProperty('bottom');
+      saveState();
+    };
+
+    const keepPlayerInView = () => {
+      if (customPosition) applyPosition(customPosition.x, customPosition.y);
     };
 
     const updateRange = (range, percent) => {
@@ -188,15 +226,82 @@
         case 'collapse':
           player.classList.add('is-collapsed');
           saveState();
+          window.setTimeout(keepPlayerInView, 260);
           break;
         case 'expand':
           player.classList.remove('is-collapsed');
           saveState();
+          window.setTimeout(keepPlayerInView, 260);
           break;
         default:
           break;
       }
     });
+
+    elements.mini.addEventListener('keydown', event => {
+      if (event.target !== elements.mini || !['Enter', ' '].includes(event.key)) return;
+      event.preventDefault();
+      elements.mini.click();
+    });
+
+    let dragState = null;
+    let suppressNextClick = false;
+    elements.panel.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      if (event.target.closest('button, a, input')) return;
+      const rect = player.getBoundingClientRect();
+      dragState = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
+        moved: false
+      };
+    });
+
+    window.addEventListener('pointermove', event => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+      const distance = Math.hypot(
+        event.clientX - dragState.startX,
+        event.clientY - dragState.startY
+      );
+      if (!dragState.moved && distance < 4) return;
+      dragState.moved = true;
+      player.classList.add('is-dragging');
+      applyPosition(
+        event.clientX - dragState.offsetX,
+        event.clientY - dragState.offsetY
+      );
+      event.preventDefault();
+    });
+
+    const finishDrag = event => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+      const didMove = dragState.moved;
+      dragState = null;
+      player.classList.remove('is-dragging');
+      if (didMove) {
+        suppressNextClick = true;
+        saveState();
+        window.setTimeout(() => {
+          suppressNextClick = false;
+        }, 0);
+      }
+    };
+    window.addEventListener('pointerup', finishDrag);
+    window.addEventListener('pointercancel', finishDrag);
+    document.addEventListener('click', event => {
+      if (!suppressNextClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+    elements.panel.addEventListener('dblclick', event => {
+      if (event.target.closest('button, a, input')) return;
+      resetPosition();
+    });
+
+    window.addEventListener('resize', keepPlayerInView);
 
     elements.progress.addEventListener('input', () => {
       if (!Number.isFinite(audio.duration)) return;
@@ -242,6 +347,7 @@
 
     updateVolume();
     loadTrack();
+    window.requestAnimationFrame(keepPlayerInView);
   };
 
   if (document.readyState === 'loading') {

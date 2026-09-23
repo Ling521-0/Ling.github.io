@@ -1393,7 +1393,7 @@ input::placeholder {
   z-index: -999;
   width: 100%;
   height: 100%;
-  background: url(/assets/post-01.jpg);;
+  background: url(/assets/home-cover-xiahuanling.jpg);;
   background-attachment: local;
   background-position: center;
   background-size: cover;
@@ -5098,7 +5098,7 @@ mjx-container[display],
   border-radius: 5px !important;
 }
 [data-theme="dark"] #web_bg {
-  background: url(/assets/post-01.jpg);;
+  background: url(/assets/home-cover-xiahuanling.jpg);;
   background-attachment: local;
   background-position: center;
   background-size: cover;
@@ -5106,14 +5106,14 @@ mjx-container[display],
 }
 @media screen and (max-width: 800px) {
   #web_bg {
-    background: url(/assets/post-01.jpg);;
+    background: url(/assets/home-cover-xiahuanling.jpg);;
     background-attachment: local !important;
     background-position: center !important;
     background-size: cover !important;
     background-repeat: no-repeat !important;
   }
   [data-theme="dark"] #web_bg {
-    background: url(/assets/post-01.jpg);;
+    background: url(/assets/home-cover-xiahuanling.jpg);;
     background-attachment: local !important;
     background-position: center !important;
     background-size: cover !important;
@@ -6459,85 +6459,9 @@ blockquote.pullquote.right {
 @font-face {
   font-family: YSHST;
   src: url(/fonts/优设好身体.woff2);
-  font-display: swap;
-  /* 定義加粗樣式(加粗多少) */
   font-weight: normal;
-  /* 定義字體樣式(斜體/非斜體) */
   font-style: normal;
-  /* 定義顯示樣式 */
-  font-display: block;
-}
-
-@font-face {
-  font-family: MiSans;
-  src: url(/fonts/MiSans.woff2);
   font-display: swap;
-  /* 定義加粗樣式(加粗多少) */
-  font-weight: normal;
-  /* 定義字體樣式(斜體/非斜體) */
-  font-style: normal;
-  /* 定義顯示樣式 */
-  font-display: block;
-}
-
-@font-face {
-  font-family: HYTMR;
-  src: url(/fonts/HYTangMeiRen55W.woff2);
-  font-display: swap;
-  /* 定義加粗樣式(加粗多少) */
-  font-weight: normal;
-  /* 定義字體樣式(斜體/非斜體) */
-  font-style: normal;
-  /* 定義顯示樣式 */
-  font-display: block;
-}
-
-@font-face {
-  font-family: LXGW;
-  src: url(/fonts/霞鹜文楷.woff2);
-  font-display: swap;
-  /* 定義加粗樣式(加粗多少) */
-  font-weight: normal;
-  /* 定義字體樣式(斜體/非斜體) */
-  font-style: normal;
-  /* 定義顯示樣式 */
-  font-display: block;
-}
-
-@font-face {
-  font-family: TTQHB;
-  src: url(/fonts/甜甜圈海报字体.woff2);
-  font-display: swap;
-  /* 定義加粗樣式(加粗多少) */
-  font-weight: normal;
-  /* 定義字體樣式(斜體/非斜體) */
-  font-style: normal;
-  /* 定義顯示樣式 */
-  font-display: block;
-}
-
-@font-face {
-  font-family: Consolas_1;
-  src: url(/fonts/Consolas.woff2);
-  font-display: swap;
-  /* 定義加粗樣式(加粗多少) */
-  font-weight: normal;
-  /* 定義字體樣式(斜體/非斜體) */
-  font-style: normal;
-  /* 定義顯示樣式 */
-  font-display: block;
-}
-
-@font-face {
-  font-family: ZhuZiAWan;
-  src: url(/fonts/ZhuZiAYuanJWD.woff2);
-  font-display: swap;
-  /* 定義加粗樣式(加粗多少) */
-  font-weight: normal;
-  /* 定義字體樣式(斜體/非斜體) */
-  font-style: normal;
-  /* 定義顯示樣式 */
-  font-display: block;
 }
 
 /* 特定部件字体调用 */
