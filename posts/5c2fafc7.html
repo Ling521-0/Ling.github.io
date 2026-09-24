@@ -195,7 +195,7 @@ document.getElementById('loading-box').addEventListener('click',()=> {preloader.
   checkURL.searchParams.set('path', window.location.pathname)
   checkURL.searchParams.set('page', '1')
   checkURL.searchParams.set('pageSize', '1')
-  checkURL.searchParams.set('sortBy', 'createdAt')
+  checkURL.searchParams.set('sortBy', 'insertedAt_desc')
   checkURL.searchParams.set('lang', 'zh-CN')
 
   fetch(checkURL, { signal: controller.signal, cache: 'no-store' }).then(response => {
