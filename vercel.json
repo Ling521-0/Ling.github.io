@@ -1,0 +1,1 @@
+{"$schema":"https://openapi.vercel.sh/vercel.json","rewrites":[{"source":"/_waline/:path*","destination":"https://waline-comments-peach-eight.vercel.app/:path*"}]}

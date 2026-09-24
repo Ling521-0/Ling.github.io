@@ -207,6 +207,11 @@ document.getElementById('loading-box').addEventListener('click',()=> {preloader.
   if (!mount || mount.dataset.walineState) return
   mount.dataset.walineState = 'loading'
   const navigationVersion = window.walineNavigationVersion || 0
+  const useSiteProxy = /(^|\.)xingandling\.top$/.test(window.location.hostname) || window.location.hostname === 'ling-github-io.vercel.app'
+  const walineServerURL = useSiteProxy ? `${window.location.origin}/_waline` : 'https://waline-comments-peach-eight.vercel.app'
+  const controller = new AbortController()
+  window.walineLoadController = controller
+  const timeout = setTimeout(() => controller.abort(), 12000)
 
   if (!document.querySelector('link[data-waline-style]')) {
     const link = document.createElement('link')
@@ -216,12 +221,25 @@ document.getElementById('loading-box').addEventListener('click',()=> {preloader.
     document.head.appendChild(link)
   }
 
-  import('/vendor/waline/waline.js').then(({ init }) => {
+  const checkURL = new URL(`${walineServerURL}/api/comment`)
+  checkURL.searchParams.set('path', window.location.pathname)
+  checkURL.searchParams.set('page', '1')
+  checkURL.searchParams.set('pageSize', '1')
+  checkURL.searchParams.set('sortBy', 'createdAt')
+  checkURL.searchParams.set('lang', 'zh-CN')
+
+  fetch(checkURL, { signal: controller.signal, cache: 'no-store' }).then(response => {
+    if (!response.ok) throw new Error(`Waline API returned ${response.status}`)
+    return response.json()
+  }).then(result => {
+    if (!result || !Object.hasOwn(result, 'data')) throw new Error('Waline API returned an invalid response')
+    return import('/vendor/waline/waline.js')
+  }).then(({ init }) => {
     if (!mount.isConnected || navigationVersion !== (window.walineNavigationVersion || 0)) return
     window.walineInstance?.destroy()
     window.walineInstance = init(Object.assign({
       el: mount,
-      serverURL: 'https://waline-comments-peach-eight.vercel.app',
+      serverURL: walineServerURL,
       pageview: false,
       dark: 'html[data-theme="dark"]',
       path: window.location.pathname,
@@ -241,12 +259,16 @@ document.getElementById('loading-box').addEventListener('click',()=> {preloader.
       loadWaline()
     })
     mount.replaceChildren(retry)
+  }).finally(() => {
+    clearTimeout(timeout)
+    if (window.walineLoadController === controller) window.walineLoadController = null
   })
 }
 
 if (!window.walinePjaxCleanupAdded) {
   document.addEventListener('pjax:send', () => {
     window.walineNavigationVersion = (window.walineNavigationVersion || 0) + 1
+    window.walineLoadController?.abort()
     window.walineInstance?.destroy()
     window.walineInstance = null
   })
