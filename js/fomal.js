@@ -3007,10 +3007,10 @@ let unsplash = "url(https://source.unsplash.com/random/1920x1080/)";
 
 
 // 更换背景(自己的代码)
-const defaultBlogBg = "url(/assets/home-cover-xiahuanling.jpg)";
-const darkModeBlogBg = "url(/assets/post-02.jpg)";
-const mobileDayBlogBg = "url(/assets/bg.jpg)";
-const mobileNightBlogBg = "url(/assets/avatar.jpg)";
+const defaultBlogBg = "url(/assets/home-cover-day.jpg)";
+const darkModeBlogBg = "url(/assets/home-cover-night.jpg)";
+const mobileDayBlogBg = defaultBlogBg;
+const mobileNightBlogBg = darkModeBlogBg;
 localStorage.setItem("blogbg", defaultBlogBg);
 document.getElementById("defineBg").innerText = `:root{
   --default-bg: ${defaultBlogBg};

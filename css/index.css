@@ -1393,7 +1393,7 @@ input::placeholder {
   z-index: -999;
   width: 100%;
   height: 100%;
-  background: url(/assets/home-cover-xiahuanling.jpg);;
+  background: url(/assets/home-cover-day.jpg);;
   background-attachment: local;
   background-position: center;
   background-size: cover;
@@ -5098,7 +5098,7 @@ mjx-container[display],
   border-radius: 5px !important;
 }
 [data-theme="dark"] #web_bg {
-  background: url(/assets/home-cover-xiahuanling.jpg);;
+  background: url(/assets/home-cover-night.jpg);;
   background-attachment: local;
   background-position: center;
   background-size: cover;
@@ -5106,14 +5106,14 @@ mjx-container[display],
 }
 @media screen and (max-width: 800px) {
   #web_bg {
-    background: url(/assets/home-cover-xiahuanling.jpg);;
+    background: url(/assets/home-cover-day.jpg);;
     background-attachment: local !important;
     background-position: center !important;
     background-size: cover !important;
     background-repeat: no-repeat !important;
   }
   [data-theme="dark"] #web_bg {
-    background: url(/assets/home-cover-xiahuanling.jpg);;
+    background: url(/assets/home-cover-night.jpg);;
     background-attachment: local !important;
     background-position: center !important;
     background-size: cover !important;
@@ -6658,6 +6658,33 @@ div#archive {
 /* 夜间模式页脚头部遮罩隐藏 */
 [data-theme="dark"] #page-header::before {
   background: transparent !important;
+}
+
+/* Keep the artwork visible; the brighter night image needs a stronger scrim. */
+#web_bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+}
+
+[data-theme="dark"] #web_bg::before {
+  background: rgba(0, 0, 0, 0.42);
+}
+
+#page-header.full_page #site-title,
+#page-header.full_page #site-subtitle,
+#page-header.full_page #scroll-down .scroll-down-effects {
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85), 0 0 18px rgba(0, 0, 0, 0.5);
+}
+
+@media screen and (max-width: 800px) {
+  #web_bg {
+    background-position: 45% center !important;
+  }
 }
 
 /* 阅读模式 */
