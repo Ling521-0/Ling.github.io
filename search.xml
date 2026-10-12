@@ -41,7 +41,7 @@
       <link href="/posts/132wwdw7.html"/>
       <url>/posts/132wwdw7.html</url>
       
-        <content type="html"><![CDATA[<p>我把 SDK 按职责拆成错误采集、性能采集、行为追踪和统一上报模块，由入口负责配置和生命周期管理。模块之间通过一个共享事件总线通信，采集模块发布事件，上报模块订阅事件后完成数据整理、入队和发送，因此采集逻辑不需要直接依赖上报实现。<br>比如发生错误时，错误模块发布 error:captured，上报模块收到后通过总线获取最近的行为面包屑，再组装错误数据；会话录制模块也能订阅同一事件，截取相关录制片段。这样新增处理能力时，可以增加订阅者，减少对已有模块的修改。<br>体积方面，我对 rrweb、Source Map 等依赖采用按需加载，并通过功能配置控制采集开销。具体 gzip 体积会以构建产物测量为准。<br>我使用浏览器原生的错误通知机制实现多维度采集：通过 window.onerror 捕获 JavaScript 运行时错误，记录消息、脚本地址、行列号和堆栈；通过 unhandledrejection 捕获未处理的 Promise 拒绝；通过捕获阶段监听 error 事件，根据目标元素识别脚本、样式和图片等资源加载失败。<br>不同类型的错误统一整理后，通过事件总线交给上报模块。上报时关联最近的点击、路由和网络请求面包屑，帮助还原错误发生前的操作过程。同时提供可选的 Source Map 解析模块，将压缩后的堆栈位置映射回源码，并缓存解析结果以减少重复开销。当前解析能力已实现，自动关联到上报数据的流程还需要完善。<br>页面性能方面，我接入 web-vitals，通过统一回调收集 FCP、LCP、CLS 等指标，整理后通过事件总线交给上报模块。<br>网络请求方面，我保存并包装原生 XHR 和 Fetch。XHR 在 open 时记录请求信息，在 send 中监听完成、失败和中止事件；Fetch 则在调用前记录时间，在 Promise 成功或失败后记录状态和耗时，同时保留响应返回和错误抛出的行为。<br>这些请求记录会进入行为面包屑，并与页面性能指标一起通过统一队列批量上报，帮助排查慢请求、异常响应和页面体验问题。<br>这里的“统一回调”指的是 handleWebVital(metric)：不同指标产生结果后，都交给这个函数整理和发布。它做两件事：</p><ol><li>整理数据：从 metric 中提取指标名称、数值、变化量等信息，再补上类型和采集时间。</li><li>发布事件：通过事件总线把数据交给上报模块，后续完成入队和批量发送。<br>我在统一上报模块里用内存数组暂存错误、性能和行为数据，采用数量阈值与定时触发相结合的批量上报策略。达到批量大小就立即发送，数量不足时由定时器触发，同时设置最大队列阈值，减少请求次数并控制数据积压。<br>发送时支持 Fetch、Beacon 和 Image 三种通道。Beacon 不可用或返回 false 时降级到 Fetch，Fetch 不可用时再降级到 Image；Fetch 的网络失败则进入重试流程。这样能够适配不同浏览器和发送场景，提高上报的可靠性。<br>可视化方面，我用 Vue 搭建监控页面，将接口返回的聚合数据转换成 ECharts 配置，展示错误趋势和性能指标变化，并提供页面分布、错误详情等视图。图表的初始化、数据更新、尺寸调整和销毁统一封装在 useChart 中，减少重复代码。<br>会话回放方面，我接入 rrweb，通过会话采样控制录制比例，使用有上限的事件缓冲保存近期记录，并配置输入遮盖和区域屏蔽，减少采集开销和敏感信息暴露。发生错误时记录时间和事件位置，继续录制一段时间后截取相关片段上报，平台再使用 Replayer 重建操作过程，辅助还原错误现场。</li></ol>]]></content>
+        <content type="html"><![CDATA[<p>我把 SDK 按职责拆成<strong>错误采集、性能采集、行为追踪和统一上报模块</strong>，由入口负责配置和生命周期管理。</p><p>模块之间通过一个<strong>共享事件总线</strong>通信，采集模块发布事件，上报模块订阅事件后完成数据整理、入队和发送，因此采集逻辑不需要直接依赖上报实现。</p><p>比如发生错误时，错误模块发布 <code>error:captured</code>，上报模块收到后通过总线获取最近的行为面包屑，再组装错误数据；会话录制模块也能订阅同一事件，截取相关录制片段。</p><p>这样新增处理能力时，可以增加订阅者，减少对已有模块的修改。</p><p><strong>体积方面</strong>，我对 <code>rrweb</code>、Source Map 等依赖采用<strong>按需加载</strong>，并通过功能配置控制采集开销。具体 gzip 体积会以构建产物测量为准。</p><hr><p>我使用浏览器原生的错误通知机制实现多维度采集：</p><ul><li>通过 <code>window.onerror</code> 捕获 JavaScript 运行时错误，记录消息、脚本地址、行列号和堆栈；</li><li>通过 <code>unhandledrejection</code> 捕获未处理的 Promise 拒绝；</li><li>通过捕获阶段监听 <code>error</code> 事件，根据目标元素识别脚本、样式和图片等资源加载失败。</li></ul><p>不同类型的错误统一整理后，通过事件总线交给上报模块。</p><p>上报时关联最近的点击、路由和网络请求面包屑，帮助还原错误发生前的操作过程。</p><p>同时提供可选的 <strong>Source Map 解析模块</strong>，将压缩后的堆栈位置映射回源码，并缓存解析结果以减少重复开销。</p><p>当前解析能力已实现，自动关联到上报数据的流程还需要完善。</p><hr><p><strong>页面性能方面</strong>，我接入 <code>web-vitals</code>，通过统一回调收集 <strong>FCP、LCP、CLS</strong> 等指标，整理后通过事件总线交给上报模块。</p><p><strong>网络请求方面</strong>，我保存并包装原生 XHR 和 Fetch。</p><ul><li>XHR 在 <code>open</code> 时记录请求信息，在 <code>send</code> 中监听完成、失败和中止事件；</li><li>Fetch 则在调用前记录时间，在 Promise 成功或失败后记录状态和耗时，同时保留响应返回和错误抛出的行为。</li></ul><p>这些请求记录会进入行为面包屑，并与页面性能指标一起通过<strong>统一队列批量上报</strong>，帮助排查慢请求、异常响应和页面体验问题。</p><p>这里的“统一回调”指的是 <code>handleWebVital(metric)</code>：不同指标产生结果后，都交给这个函数整理和发布。它做两件事：</p><ol><li>整理数据：从 metric 中提取指标名称、数值、变化量等信息，再补上类型和采集时间。</li><li>发布事件：通过事件总线把数据交给上报模块，后续完成入队和批量发送。</li></ol><hr><p>我在统一上报模块里用内存数组暂存错误、性能和行为数据，采用<strong>数量阈值与定时触发相结合</strong>的批量上报策略。</p><p>达到批量大小就立即发送，数量不足时由定时器触发，同时设置最大队列阈值，减少请求次数并控制数据积压。</p><p>发送时支持 <strong>Fetch、Beacon 和 Image</strong> 三种通道。</p><p>Beacon 不可用或返回 <code>false</code> 时降级到 Fetch，Fetch 不可用时再降级到 Image；Fetch 的网络失败则进入重试流程。</p><p>这样能够适配不同浏览器和发送场景，提高上报的可靠性。</p><hr><p><strong>可视化方面</strong>，我用 Vue 搭建监控页面，将接口返回的聚合数据转换成 ECharts 配置，展示错误趋势和性能指标变化，并提供页面分布、错误详情等视图。</p><p>图表的初始化、数据更新、尺寸调整和销毁统一封装在 <code>useChart</code> 中，减少重复代码。</p><hr><p><strong>会话回放方面</strong>，我接入 <code>rrweb</code>，通过<strong>会话采样</strong>控制录制比例，使用有上限的事件缓冲保存近期记录，并配置<strong>输入遮盖和区域屏蔽</strong>，减少采集开销和敏感信息暴露。</p><p>发生错误时记录时间和事件位置，继续录制一段时间后截取相关片段上报，平台再使用 <code>Replayer</code> 重建操作过程，辅助还原错误现场。</p>]]></content>
       
       
       <categories>
@@ -502,31 +502,25 @@
     
     
     <entry>
-      <title>面试复盘02</title>
+      <title>ai对话面试问题</title>
       <link href="/posts/124d7da1.html"/>
       <url>/posts/124d7da1.html</url>
       
-        <content type="html"><![CDATA[<p>面试指导复盘<br>一.技术性知识相关1.<br>01.具体都采用了什么策略来减少大模型的幻觉,效果怎么样,怎么做的效果检测;<br>2.你的RAG如何实现的信息隔离,你的策略在召回前还是召回后,为什么这么设计;<br>3.你的工具如何判断是否该调用,如果没调用怎么发现怎么修正,多个工具调用怎么规范调用顺序与结果返回;<br>4.你创新的记忆架构具体怎么设计的，为什么这么设计,这么设计在你的项目里解决了哪些问题;<br>5.有没有,是怎么做的对不同错误情景的处理,遇见不同问题的降级策略都是什么;<br>6.你的长期记忆具体怎么存储的,存储的哪些信息;<br>7.为什么选用langchain架构而不使用原生代码,利用langchain做了什么;<br>8.多个agent之间的关系与如何实现通讯,为什么这么设计你的通信机制;二.技术性知识相关<br>2.01.RAG本地知识库的分块chunk_size与overlap设置,为什么选择这个大小;2.embedding模型选取,为什么选择这个模型,经过对比有什么区别;<br>3.采用什么数据库存储向量信息,它的优势在哪里;<br>4.置信度阈值过滤策略;<br>5.chunk的嵌入模型和query的嵌入模型是否一致,为什么这么选取;<br>6.你的项目用的哪种MCP通信机制,为什么这么选择;<br>7.混合检索与传统召回的区别;8.你是怎么做评测的,效果好不好,有没有采取一些策略来提高召回率,做了什么,效果怎样.<br>三.技术性知识相关3,01.你的本地模型是怎么部署的,多少b,首token延迟考虑了吗,部署在本机的哪里<br>四.重点问题<br>1.项目玩具属性太重,太多地方纯靠prompt约束,只会调api,项目背景不明确,很多地方没做好错误降级处理,工程化落地不够;2.相关八股没背或者没理解完全.<br>五.收获<br>1.将项目重构,力求自己说清讲明,做好各种可能情况的处理,设计好降级策略，做好工程化落地而非demo;2.思考如何体现自己的竞争力,不能只是调API,思考如何让自己的简历让面试官感兴趣;<br>3.八股背好</p>]]></content>
+        <content type="html"><![CDATA[<h2 id="1．组件封装与交互管理"><a href="#1．组件封装与交互管理" class="headerlink" title="1．组件封装与交互管理"></a>1．组件封装与交互管理</h2><p>我按职责拆分了 <code>Main</code>、<code>SideBar</code> 和 <code>MarkdownRenderer</code>，并抽取 <code>MessageRow</code>，统一处理消息角色、正文和生成状态。</p><p>消息、会话以及发送操作通过 <code>Context</code> 共享，侧边栏负责会话管理，主区域根据状态展示聊天内容。</p><p>文本发送、回车发送、推荐问题和语音识别结果都进入同一个 <code>onSent</code> 流程，<strong>复用消息创建、请求和状态更新逻辑</strong>。</p><h2 id="2．流式解析与渐进渲染"><a href="#2．流式解析与渐进渲染" class="headerlink" title="2．流式解析与渐进渲染"></a>2．流式解析与渐进渲染</h2><p>我使用 <code>fetch</code> 发起请求，通过 <code>ReadableStream</code> 持续读取响应，再用 <code>TextDecoder</code> 进行流式解码。</p><p>考虑到一次读取不一定包含完整的数据行，我维护 <strong>SSE 解析缓冲区</strong>，保留未完成的内容，拼接完整后再解析 JSON、提取回复正文。</p><p>正文进入独立的渲染缓冲区，大约每 <strong>50 毫秒</strong>输出一小段，追加到同一条 AI 消息中，实现<strong>网络接收与界面更新节奏解耦</strong>。</p><p>生成结束时输出剩余文本并清理定时器，用户停止生成时通过 <code>AbortController</code> 中断请求。</p><h2 id="3．虚拟列表与滚动跟随"><a href="#3．虚拟列表与滚动跟随" class="headerlink" title="3．虚拟列表与滚动跟随"></a>3．虚拟列表与滚动跟随</h2><p>针对长会话中消息节点不断增加的问题，我在聊天区接入 <code>react-virtuoso</code>，通过 <code>data</code> 提供完整消息，通过 <code>itemContent</code> 渲染单条消息，并配置 <code>overscan</code> 缓冲，减少同时挂载的消息组件和 DOM 数量。</p><p>滚动方面，通过 <code>atBottomStateChange</code> 维护底部状态，再用 <code>followOutput</code> 控制跟随：<strong>用户在底部时跟随最新输出，向上查看历史时关闭跟随</strong>。</p><p>同时通过 <code>ref</code> 封装主动滚底方法，用于发送消息等交互。</p><h2 id="4．语音输入与状态管理"><a href="#4．语音输入与状态管理" class="headerlink" title="4．语音输入与状态管理"></a>4．语音输入与状态管理</h2><p>我把 Web Speech API 封装成 <code>useSpeechRecognition</code> Hook，对外提供识别状态、实时转写、错误信息和开始停止操作。</p><p>交互上设计了 <code>idle</code>、<code>recording</code>、<code>processing</code> 三态：</p><ul><li>开始识别后进入 <code>recording</code>，在 <code>onresult</code> 中区分临时结果和最终结果，实时更新预览；</li><li>用户手动结束后进入 <code>processing</code>，等待识别结束，再通过回调提交最终文本。</li></ul><p>识别文本显式传给统一的 <code>onSent</code> 方法，复用文本发送流程。</p><p>同时处理常见识别错误，并在 <code>effect</code> 清理时取消识别、移除回调。</p><h2 id="5．Markdown-渲染与代码高亮"><a href="#5．Markdown-渲染与代码高亮" class="headerlink" title="5．Markdown 渲染与代码高亮"></a>5．Markdown 渲染与代码高亮</h2><p>我封装了 <code>MarkdownRenderer</code>，让消息组件只负责传入正文，<strong>格式解析和展示规则集中在渲染组件中</strong>。</p><p>底层使用 <code>ReactMarkdown</code>，通过 <code>remark-gfm</code> 支持表格、任务列表和删除线等语法，通过 <code>rehype-highlight</code> 提供基于 <code>highlight.js</code> 的代码高亮，并引入主题 CSS 控制高亮样式。</p><p>展示结构通过 <code>components</code> 扩展，使不同消息使用统一的 Markdown 渲染规则。</p>]]></content>
       
       
       <categories>
           
           <category> 求职 </category>
           
-          <category> 面试复盘 </category>
-          
       </categories>
       
       
         <tags>
             
-            <tag> Agent </tag>
-            
             <tag> 面试 </tag>
             
             <tag> AI </tag>
-            
-            <tag> RAG </tag>
             
         </tags>
       
