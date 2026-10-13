@@ -1,0 +1,129 @@
+#body-wrap.post #post {
+  min-width: 0;
+  background: var(--trans-light, rgba(253, 253, 253, 0.94));
+}
+
+[data-theme="dark"] #body-wrap.post #post {
+  background: var(--trans-dark, rgba(25, 25, 25, 0.94));
+}
+
+#body-wrap.post #aside-content .card-widget {
+  background-color: var(--trans-light, rgba(253, 253, 253, 0.94));
+}
+
+[data-theme="dark"] #body-wrap.post #aside-content .card-widget {
+  background-color: var(--trans-dark, rgba(25, 25, 25, 0.94));
+}
+
+#body-wrap.post #article-container {
+  max-width: 800px;
+  margin-inline: auto;
+  font-size: 16px;
+  line-height: 1.9;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+#body-wrap.post #article-container p {
+  margin: 0 0 1.15em;
+}
+
+#body-wrap.post #article-container h1,
+#body-wrap.post #article-container h2,
+#body-wrap.post #article-container h3,
+#body-wrap.post #article-container h4 {
+  margin: 1.8em 0 0.8em;
+  line-height: 1.5;
+  scroll-margin-top: 90px;
+}
+
+#body-wrap.post #article-container h1 {
+  font-size: 28px;
+}
+
+#body-wrap.post #article-container h2 {
+  font-size: 24px;
+}
+
+#body-wrap.post #article-container h3 {
+  font-size: 20px;
+}
+
+#body-wrap.post #article-container h4 {
+  font-size: 17px;
+}
+
+#body-wrap.post #article-container > :first-child {
+  margin-top: 0;
+}
+
+#body-wrap.post #article-container ul,
+#body-wrap.post #article-container ol {
+  margin: 0.8em 0 1.3em;
+  padding-left: 1.8em;
+}
+
+#body-wrap.post #article-container li {
+  margin: 0.4em 0;
+}
+
+#body-wrap.post #article-container li > p {
+  margin-bottom: 0.5em;
+}
+
+#body-wrap.post #article-container blockquote {
+  margin: 1.2em 0;
+  padding: 14px 20px;
+}
+
+#body-wrap.post #article-container blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+#body-wrap.post #article-container p code,
+#body-wrap.post #article-container li code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.9em;
+}
+
+#body-wrap.post #article-container pre,
+#body-wrap.post #article-container figure.highlight {
+  max-width: 100%;
+  margin: 1.2em 0;
+  line-height: 1.65;
+  overflow-wrap: normal;
+}
+
+#body-wrap.post #article-container pre code,
+#body-wrap.post #article-container figure.highlight code {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+#body-wrap.post #article-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+#body-wrap.post #article-container hr {
+  margin: 2em 0;
+}
+
+@media screen and (max-width: 768px) {
+  #body-wrap.post #post {
+    padding: 28px 22px;
+  }
+
+  #body-wrap.post #article-container h1 {
+    font-size: 25px;
+  }
+
+  #body-wrap.post #article-container h2 {
+    font-size: 22px;
+  }
+
+  #body-wrap.post #article-container blockquote {
+    padding: 12px 14px;
+  }
+}
