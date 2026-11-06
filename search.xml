@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>SDK难点：数据上报</title>
+      <link href="/posts/d1e346fb.html"/>
+      <url>/posts/d1e346fb.html</url>
+      
+        <content type="html"><![CDATA[<p>需求背景：上报模块要解决的两个矛盾</p><p>监控 SDK 有一个特殊约束：它本身不能影响业务，同时又必须尽可能把监控数据送到服务端。如果每一次点击、性能事件、错误都立即发一个请求，会产生大量额外请求；但如果一直缓存在内存里，用户关闭页面或者网络异常时又容易丢数据。所以上报层主要解决两个问题：降低上报成本，以及在异常网络和页面卸载场景下尽可能保证数据送达。</p><p>普通监控数据（错误、性能、行为）的特点是事件数量多、单条数据比较小、不需要每条立即发送、可以接受少量延迟，因此适合用“队列 + 批量 + 定时 Flush”的模式。而录屏数据完全不同：事件量大、单次 Payload 大、对网络和页面生命周期更敏感，而且只在发生异常后才真正有价值，所以更适合“持续录制 + 环形缓冲 + 错误触发截取 + 独立上报”。理解了这个差异，后续的设计就顺理成章了。</p><p>普通数据上报：队列、批量与双阈值触发</p><p>DataReporter 初始化时维护一个队列（this.queue）和定时器（this.timer），所有错误、性能、行为数据最终都会进入 addToQueue(data)，而不是立即发送。连续产生多个事件时不会产生多个 HTTP 请求，而是先进入队列，满足条件时才 Flush。代码中有两个立即 Flush 条件：达到 batchSize（默认 5 条）或达到 maxQueueSize（默认 20 条）；如果没达到，就设置一个 5 秒的定时器等待。<br>这样设计的原因可以对比三种方案。每条事件立即发送实现最简单、实时性最高，但请求次数太多，HTTP Header 等固定开销被重复支付，弱网环境下会产生大量失败请求。固定时间窗口批量发送能大幅减少请求数，实现简单，但数据实时性降低，且事件量突然增大时单次 Payload 会变得很大。而数量阈值加时间阈值（达到 5 条立即 Flush，不足 5 条最多等 5 秒）则兼顾了吞吐和实时性：高流量场景下很快到达阈值立即发送，低流量场景下最多等待固定时间不会一直积压。所以可以总结为“采用数量阈值和时间阈值双触发，兼顾吞吐和实时性”。</p><p>maxQueueSize 的设置则是一个典型的内存保护问题。如果网络完全中断，事件持续产生而队列无法 Flush，没有上限的话 Queue 会无限增长，导致 JS Heap 持续上涨，反过来影响业务。因此设置 maxQueueSize = 20，一旦超过就立即 Flush，即使发送失败也有重试机制，而不是让内存无边界增长。这里体现了一个重要原则：监控数据必须有资源上限，监控系统不能为了保证监控完整性，把业务页面自己的内存打爆。<br>Flush 时的实现细节也值得注意：先通过 const batchData = […this.queue]; this.queue = []; 复制旧队列并清空，然后发送 batchData。这样旧数据在发送过程中，新产生的事件可以继续进入新的空队列，避免发送中的数据和新数据互相污染。本质上是一个 Queue Snapshot 操作，虽然代码简单，但设计思想正确。</p><p>重试策略：指数退避与次数上限<br>发送失败后不能简单地每隔固定时间重试一次，因为如果服务端故障、限流或网络异常，大量用户同时每秒重试会形成 Retry Storm，进一步加重服务端压力。所以代码采用指数退避，延迟时间按 retryDelay * Math.pow(2, count) 增长，默认 retryDelay = 1000ms，即第 1 次重试 1 秒、第 2 次 2 秒、第 3 次 4 秒。指数退避的核心不是把失败请求无限发出去，而是在保证一定送达能力的同时避免故障放大。<br>同时重试必须有次数上限，当前默认最多重试 3 次（retryCount = 3）。没有上限会导致永远重试，内存状态、定时器、请求都无法结束。超过次数后触发 eventBus.emit(‘reporter:report:failed’, …)，表示这条数据进入最终失败状态，不再无意义地占用资源。</p><p>多通道传输：Fetch、Beacon、Image 的角色与降级边界</p><p>传输层支持 Fetch、Beacon、Image 三种方式，但不是简单的“Fetch 失败自动换 Beacon，Beacon 失败换 Image”的固定顺序降级。实际逻辑是：根据配置选择主传输方式，例如配置为 Fetch 时，如果 Fetch 不可用则 fallback 到 Image；配置为 Beacon 时，如果 Beacon 发送失败则 fallback 到 Fetch；配置为 Image 时，发送失败则直接进入重试。网络发送失败后统一进入重试逻辑。<br>Fetch 是默认的主传输手段，因为它支持标准 POST、可以传 JSON、能处理 Promise，业务能力最完整，并且代码中设置了 keepalive: true 以便在页面卸载时尽量发送。但页面卸载时的可靠性不如 Beacon，某些老环境也可能没有 Fetch。<br>Beacon（navigator.sendBeacon）的价值不在于更快，而在于页面离开时依然希望把数据交出去。用户关闭页面、刷新页面、跳转页面是监控场景中常见的数据丢失点，Beacon 恰好能在这个时机发送数据，因此更适合作为页面生命周期结束时的数据发送手段。实现中 Beacon 返回失败时会 fallback 到 Fetch。<br>Image Beacon（new Image(); img.src = url;）是一种非常基础的兜底方案，对浏览器环境要求低，不依赖 Fetch，不需要复杂的 CORS 请求模型，但 Payload 放在 URL 里受长度限制，语义不如 POST，不适合大数据，所以能力最弱，只作为老环境或 Fetch 不可用场景下的最后 fallback。面试时不应该说“Image 最稳定”，而应该说“Image 的能力最弱，我只是把它作为最后兜底”。</p><p>Session Replay：为什么持续录制而不是错误后再录</p><p>Session Replay 的设计首先回答一个问题：如果发生错误后才启动 rrweb，只能录到错误之后的行为，但实际定位问题最需要的是用户错误之前做了什么。例如用户进入订单页、点击编辑、切换地址、请求失败、点击提交、最后 JS Error，真正有价值的可能是错误前 30 秒的操作序列。所以实现采用始终后台录制，环形缓冲只保留最近一段数据。初始化后立即启动 rrweb，持续把事件放进缓冲区。<br>不能一直保存所有录屏的原因很直接：Session Replay 会产生持续增长的事件流，一个用户打开页面 2 小时就会积累大量数据，全部放内存里不合理。所以使用环形缓冲（Ring Buffer），当前实现是 this.events.push(event); if (this.events.length &gt; maxEvents) this.events.shift();。默认 maxReplayDuration = 60 秒，按照大约 15 events/second 估算 maxEvents = 60 × 15 = 900。它的核心不是“用了一个环形缓冲区”，而是“持续录屏，但必须把内存占用限制在固定上限内，所以采用固定窗口的滑动缓存”。<br>错误发生时，代码会记录 this.lastErrorTime = Date.now()、this.errorIndex = this.events.length 并递增 pendingErrorCount，也就是在事件流中标记错误位置，然后不是立即上传，而是继续录制，等待 replayAfterError（默认 10 秒）后开始截取。这样既能拿到错误前 30 秒，又能拿到错误后 10 秒，因为很多 Bug 的现象在错误后还会继续演变。默认配置 replayBeforeError = 30、replayAfterError = 10 形成了完整的时间窗口。<br>截取时不是简单 slice(startIndex)，还会根据 event.timestamp &gt;= cutoffTime 进行二次过滤。原因在于事件数量只是估算，rrweb 每秒产生的事件数并不完全固定，所以先用事件数量粗筛定位起始位置，再用时间戳校正精确的时间窗口，避免固定 events/s 估算带来的误差。<br>由于环形缓冲会不断移除最老的事件，错误位置的索引需要同步调整。代码中在 shift() 时执行 if (this.errorIndex &gt; 0) this.errorIndex—;，如果错误位置恰好是被删除的第一个事件，errorIndex 会变成 -1，表示错误对应的数据已经滚出缓冲区。这个细节可以证明真的看过源码，而不是只知道 rrweb。<br>录屏的成本与隐私控制：采样、脱敏与独立上报<br>录屏是高成本能力，因此配置了 sessionReplaySampleRate = 0.1，默认只有部分会话启用录屏。与普通监控的高覆盖率不同，Replay 采用低采样，形成“普通监控高覆盖、Session Replay 低采样”的成本控制思路。面试中可以说“录屏是高成本能力，所以我把它作为独立高级能力，通过 feature switch 加 sample rate 双层控制”。<br>隐私是 Session Replay 的另一个核心约束。配置中设置了 maskAllInputs: true，并且 blockSelector = .monitor-block、ignoreClass = monitor-ignore、maskTextSelector = input, textarea, [data-monitor-mask]，意味着输入框、文本域以及带特定属性的元素默认不会被原样记录，敏感区域可以通过 .monitor-block 整体屏蔽。这样避免把密码、表单内容等业务数据直接进入录屏。此外还设置了 recordCanvas: false，因为 Canvas 录制数据量大、性能成本高，且很多场景并不是异常定位的必要信息，默认关闭是用成本换必要性。<br>录屏数据故意绕过 DataReporter 的普通队列，直接发送到 /api/session-replay。原因是普通监控数据每条可能只有几 KB，而 rrweb 的 DOM Snapshot、Mutation、Input、Mouse、Scroll 等事件很容易比普通监控事件大很多。如果混用队列，一个大的 Replay Payload 可能阻塞普通 Error 和 Performance 的 Flush，影响整体上报链路的时效性。所以两者使用不同的数据传输策略：普通数据目标是高吞吐、低开销，采用队列、批量、重试；Replay 目标则是高价值、大 Payload、与错误强关联，采用持续缓冲、错误触发、时间窗口截取、独立 Endpoint、Beacon 优先。<br>页面生命周期兜底<br>普通数据和 Replay 都面临页面突然关闭导致数据丢失的问题。例如错误发生后还有 5 秒的 replayAfterError 等待，但用户立刻关闭页面，setTimeout 回调可能根本来不及执行。因此 SessionReplay 和 DataReporter 都监听 visibilitychange 和 pagehide，页面进入隐藏状态时直接尝试 Flush。Replay 上报时优先使用 sendBeacon，失败再 fetch + keepalive。这样就形成了完整的页面生命周期兜底链路：正常运行通过定时或错误触发上报，页面离开时通过 visibilitychange/pagehide 立即发送，发送方式选择 Beacon 或 Fetch keepalive。</p><p>面试讲述思路与简历建议</p><p>面试时不要一上来就罗列“批量队列、指数退避、多通道降级”，而应该从需求背景出发，逐步推导设计决策。<br>首先说明监控 SDK 上报的核心矛盾：既要降低请求开销，又要在页面卸载和网络异常时保证送达。然后将问题拆成普通数据和录屏数据两类，分别讨论。普通数据采用队列加批量，用数量和时间双阈值触发 Flush；失败重试采用指数退避并限制次数，避免 Retry Storm；传输层根据配置选择 Fetch、Beacon 或 Image，并在能力不可用或发送失败时进行合理的 fallback。录屏数据则采用持续录制加环形缓冲，始终保留最近一段时间，错误发生时标记位置，继续录制几秒后截取错误前后的时间窗口，独立上报，并通过采样、输入掩码、敏感元素屏蔽和 Canvas 关闭来控制成本和隐私。最后提到页面卸载时通过 visibilitychange/pagehide 配合 Beacon 和 Fetch keepalive 兜底<br>让每个技术点都能对应一个“为什么”：批量队列和双阈值讲吞吐与实时性，指数退避讲 Retry Storm，多通道传输讲 Fetch/Beacon/Image 的 trade-off，持续录制和固定容量缓冲区讲为什么不是错误后才录，独立上报讲为什么 Replay 不进入普通 Reporter，生命周期兜底讲 visibilitychange、pagehide、sendBeacon、keepalive。准备充分的话，面试官可以从这一个 bullet 连续问出 HTTP、浏览器生命周期、事件队列、重试策略、性能、内存管理、隐私、安全、SDK 架构一整套问题。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 项目 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 项目 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>19岁，向前走</title>
       <link href="/posts/forward-at-19.html"/>
       <url>/posts/forward-at-19.html</url>

@@ -1,0 +1,356 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><div id="myscoll"></div><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>SDK难点：数据上报 | 夏夏呐</title><meta name="keywords" content="项目"><meta name="author" content="Ling521-0"><meta name="copyright" content="Ling521-0"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="需求背景：上报模块要解决的两个矛盾 监控 SDK 有一个特殊约束：它本身不能影响业务，同时又必须尽可能把监控数据送到服务端。如果每一次点击、性能事件、错误都立即发一个请求，会产生大量额外请求；但如果一直缓存在内存里，用户关闭页面或者网络异常时又容易丢数据。所以上报层主要解决两个问题：降低上报成本，以及在异常网络和页面卸载场景下尽可能保证数据送达。 普通监控数据（错误、性能、行为）的特点是事件数量多">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SDK难点：数据上报">
+<meta property="og:url" content="https://www.xingandling.top/posts/d1e346fb.html">
+<meta property="og:site_name" content="夏夏呐">
+<meta property="og:description" content="需求背景：上报模块要解决的两个矛盾 监控 SDK 有一个特殊约束：它本身不能影响业务，同时又必须尽可能把监控数据送到服务端。如果每一次点击、性能事件、错误都立即发一个请求，会产生大量额外请求；但如果一直缓存在内存里，用户关闭页面或者网络异常时又容易丢数据。所以上报层主要解决两个问题：降低上报成本，以及在异常网络和页面卸载场景下尽可能保证数据送达。 普通监控数据（错误、性能、行为）的特点是事件数量多">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.xingandling.top/assets/uploads/2026/11/1793944965505-ezgif-4454147ffd423d.gif">
+<meta property="article:published_time" content="2026-11-06T06:02:00.000Z">
+<meta property="article:modified_time" content="2026-11-06T06:02:00.000Z">
+<meta property="article:author" content="Ling521-0">
+<meta property="article:tag" content="项目">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.xingandling.top/assets/uploads/2026/11/1793944965505-ezgif-4454147ffd423d.gif"><link rel="shortcut icon" href="/assets/site-icon-xiahuanling.jpg"><link rel="canonical" href="https://www.xingandling.top/posts/d1e346fb.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/6.1.1/css/all.min.css" integrity="sha384-/frq1SRXYH/bSyou/HUp/hib7RVN1TawQYja658FEOodR/FQBKVqT9Ol+Oz3Olq5" crossorigin="anonymous" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.staticfile.org/fancyapps-ui/4.0.31/fancybox.min.css" integrity="sha384-7Z/GY8j220u+q6OOCj36sK8vgFz8Y5Q+HQ9OX56TonmVdLKJJ6lo1/RdWVdMYG8+" crossorigin="anonymous" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":230},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdnjs.cloudflare.com/ajax/libs/flickr-justified-gallery/2.1.2/fjGallery.min.js',
+      css: 'https://cdnjs.cloudflare.com/ajax/libs/flickr-justified-gallery/2.1.2/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'SDK难点：数据上报',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2026-11-06 14:02:00'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          const now = new Date()
+          const hour = now.getHours()
+          const isNight = hour <= 6 || hour >= 18
+          if (t === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else if (t === 'light') activateLightMode()
+          else activateDarkMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/floating-player.css"><link rel="stylesheet" href="/css/article-layout.css"><link rel="stylesheet" href="/css/archive-calendar.css"><link rel="stylesheet" href="https://cdn.staticfile.org/element-ui/2.15.6/theme-chalk/index.min.css" integrity="sha384-B34cFH7K97WLDQUea3So999IboSvJV2fBlOSHrzf+YtORAVbjWdMOTVUGFaEDSbG" crossorigin="anonymous"><style id="themeColor"></style><style id="rightSide"></style><style id="transPercent"></style><style id="blurNum"></style><style id="settingStyle"></style><span id="fps"></span><style id="defineBg"></style><style id="menu_shadow"></style><script src="https://cdn.staticfile.org/echarts/6.0.0/echarts.min.js" integrity="sha384-F07Cpw5v8spSU0H113F33m2NQQ/o6GqPTnTjf45ssG4Q6q58ZwhxBiQtIaqvnSpR" crossorigin="anonymous"></script><svg aria-hidden="true" style="position:absolute; overflow:hidden; width:0; height:0"><symbol id="icon-sun" viewBox="0 0 1024 1024"><path d="M960 512l-128 128v192h-192l-128 128-128-128H192v-192l-128-128 128-128V192h192l128-128 128 128h192v192z" fill="#FFD878" p-id="8420"></path><path d="M736 512a224 224 0 1 0-448 0 224 224 0 1 0 448 0z" fill="#FFE4A9" p-id="8421"></path><path d="M512 109.248L626.752 224H800v173.248L914.752 512 800 626.752V800h-173.248L512 914.752 397.248 800H224v-173.248L109.248 512 224 397.248V224h173.248L512 109.248M512 64l-128 128H192v192l-128 128 128 128v192h192l128 128 128-128h192v-192l128-128-128-128V192h-192l-128-128z" fill="#4D5152" p-id="8422"></path><path d="M512 320c105.888 0 192 86.112 192 192s-86.112 192-192 192-192-86.112-192-192 86.112-192 192-192m0-32a224 224 0 1 0 0 448 224 224 0 0 0 0-448z" fill="#4D5152" p-id="8423"></path></symbol><symbol id="icon-moon" viewBox="0 0 1024 1024"><path d="M611.370667 167.082667a445.013333 445.013333 0 0 1-38.4 161.834666 477.824 477.824 0 0 1-244.736 244.394667 445.141333 445.141333 0 0 1-161.109334 38.058667 85.077333 85.077333 0 0 0-65.066666 135.722666A462.08 462.08 0 1 0 747.093333 102.058667a85.077333 85.077333 0 0 0-135.722666 65.024z" fill="#FFB531" p-id="11345"></path><path d="M329.728 274.133333l35.157333-35.157333a21.333333 21.333333 0 1 0-30.165333-30.165333l-35.157333 35.157333-35.114667-35.157333a21.333333 21.333333 0 0 0-30.165333 30.165333l35.114666 35.157333-35.114666 35.157334a21.333333 21.333333 0 1 0 30.165333 30.165333l35.114667-35.157333 35.157333 35.157333a21.333333 21.333333 0 1 0 30.165333-30.165333z" fill="#030835" p-id="11346"></path></symbol></svg><!-- hexo injector head_end start --><link rel="stylesheet" href="/vendor/swiper/swiper.min.css?v=4.1.6-local.1" media="print" onload="this.media='all'"><link rel="stylesheet" href="/vendor/swiper/swiperstyle.css?v=4.1.6-local.1" media="print" onload="this.media='all'"><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="夏夏呐" type="application/atom+xml">
+</head><body><div id="loading-box" onclick="document.getElementById(&quot;loading-box&quot;).classList.add(&quot;loaded&quot;)"><div class="loading-bg"><div class="loading-img"></div><div class="loading-image-dot"></div></div></div><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/assets/avatar.jpg" onerror="onerror=null;src='/assets/r1.jpg'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">19</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">45</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">18</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page faa-parent animated-hover" href="/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-home"></use></svg><span class="menu_word" style="font-size:17px"> 首页</span></a></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon--article"></use></svg><span class="menu_word" style="font-size:17px"> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/archives/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-guidang1">                   </use></svg><span class="menu_word" style="font-size:17px"> 归档</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/tags/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-sekuaibiaoqian">                   </use></svg><span class="menu_word" style="font-size:17px"> 标签</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/categories/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-fenlei">                   </use></svg><span class="menu_word" style="font-size:17px"> 分类</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-pinweishenghuo"></use></svg><span class="menu_word" style="font-size:17px"> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/life/music/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-yinle">                   </use></svg><span class="menu_word" style="font-size:17px"> 八音盒</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/life/games/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-youxishoubing">                   </use></svg><span class="menu_word" style="font-size:17px"> 游戏</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/life/books/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon--article">                   </use></svg><span class="menu_word" style="font-size:17px"> 小说</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-shejiaoxinxi"></use></svg><span class="menu_word" style="font-size:17px"> 社交</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/social/fcircle/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-pengyouquan">                   </use></svg><span class="menu_word" style="font-size:17px"> 朋友圈</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/social/link/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-lianjie">                   </use></svg><span class="menu_word" style="font-size:17px"> 友人帐</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/social/guestbook/"><i class="fa-fw fas fa-comments faa-tada"></i><span class="menu_word" style="font-size:17px"> 留言板</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-wangye"></use></svg><span class="menu_word" style="font-size:17px"> 网站</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/site/census/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon--tongjibiao">                   </use></svg><span class="menu_word" style="font-size:17px"> 网站统计</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/site/echarts/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-shujutongji1">                   </use></svg><span class="menu_word" style="font-size:17px"> 文章统计</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/site/time/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-xianxingshalou">                   </use></svg><span class="menu_word" style="font-size:17px"> 旧时光</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-maoliang"></use></svg><span class="menu_word" style="font-size:17px"> 个人</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/personal/bb/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-qunliaotian">                   </use></svg><span class="menu_word" style="font-size:17px"> 唠叨</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/assets/uploads/2026/11/1793944965505-ezgif-4454147ffd423d.gif')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">夏夏呐</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page faa-parent animated-hover" href="/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-home"></use></svg><span class="menu_word" style="font-size:17px"> 首页</span></a></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon--article"></use></svg><span class="menu_word" style="font-size:17px"> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/archives/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-guidang1">                   </use></svg><span class="menu_word" style="font-size:17px"> 归档</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/tags/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-sekuaibiaoqian">                   </use></svg><span class="menu_word" style="font-size:17px"> 标签</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/categories/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-fenlei">                   </use></svg><span class="menu_word" style="font-size:17px"> 分类</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-pinweishenghuo"></use></svg><span class="menu_word" style="font-size:17px"> 休闲</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/life/music/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-yinle">                   </use></svg><span class="menu_word" style="font-size:17px"> 八音盒</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/life/games/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-youxishoubing">                   </use></svg><span class="menu_word" style="font-size:17px"> 游戏</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/life/books/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon--article">                   </use></svg><span class="menu_word" style="font-size:17px"> 小说</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-shejiaoxinxi"></use></svg><span class="menu_word" style="font-size:17px"> 社交</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/social/fcircle/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-pengyouquan">                   </use></svg><span class="menu_word" style="font-size:17px"> 朋友圈</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/social/link/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-lianjie">                   </use></svg><span class="menu_word" style="font-size:17px"> 友人帐</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/social/guestbook/"><i class="fa-fw fas fa-comments faa-tada"></i><span class="menu_word" style="font-size:17px"> 留言板</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-wangye"></use></svg><span class="menu_word" style="font-size:17px"> 网站</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/site/census/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon--tongjibiao">                   </use></svg><span class="menu_word" style="font-size:17px"> 网站统计</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/site/echarts/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-shujutongji1">                   </use></svg><span class="menu_word" style="font-size:17px"> 文章统计</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/site/time/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-xianxingshalou">                   </use></svg><span class="menu_word" style="font-size:17px"> 旧时光</span></a></li></ul></div><div class="menus_item"><a class="site-page group faa-parent animated-hover hide" href="javascript:void(0);"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-maoliang"></use></svg><span class="menu_word" style="font-size:17px"> 个人</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/personal/bb/"><svg class="menu_icon faa-tada" aria-hidden="true" style="width:1.30em;height:1.30em;vertical-align:-0.15em;fill:currentColor;overflow:hidden;"><use xlink:href="#icon-qunliaotian">                   </use></svg><span class="menu_word" style="font-size:17px"> 唠叨</span></a></li></ul></div></div><center id="name-container"><a id="page-name" href="javascript:scrollToTop()">PAGE_NAME</a></center><div id="nav-right"><div id="search-button"><a class="search faa-parent animated-hover" title="检索站内任何你想要的信息"><svg class="faa-tada icon" style="height:24px;width:24px;fill:currentColor;position:relative;top:6px" aria-hidden="true"><use xlink:href="#icon-valentine_-search-love-find-heart"></use></svg><span> 搜索</span></a></div><a class="meihua faa-parent animated-hover" onclick="toggleWinbox()" title="美化设置-自定义你的风格" id="meihua-button"><svg class="faa-tada icon" style="height:26px;width:26px;fill:currentColor;position:relative;top:8px" aria-hidden="true"><use xlink:href="#icon-tupian1"></use></svg></a><a class="sun_moon faa-parent animated-hover" onclick="switchNightMode()" title="浅色和深色模式转换" id="nightmode-button"><svg class="faa-tada" style="height:25px;width:25px;fill:currentColor;position:relative;top:7px" viewBox="0 0 1024 1024"><use id="modeicon" xlink:href="#icon-moon">       </use></svg></a><div id="toggle-menu"><a><i class="fas fa-bars fa-fw"></i></a></div></div></div></nav><div id="post-info"><h1 class="post-title">SDK难点：数据上报</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><svg class="meta_icon post-meta-icon" style="width:30px;height:30px;position:relative;top:10px"><use xlink:href="#icon-rili"></use></svg><span class="post-meta-label">发表于 </span><time class="post-meta-date-created" datetime="2026-11-06T06:02:00.000Z" title="发表于 2026-11-06 14:02:00">2026-11-06</time><span class="post-meta-separator">|</span><svg class="meta_icon post-meta-icon" style="width:18px;height:18px;position:relative;top:5px"><use xlink:href="#icon-gengxin1"></use></svg><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-06T06:02:00.000Z" title="更新于 2026-11-06 14:02:00">2026-11-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><svg class="meta_icon post-meta-icon" style="width:18px;height:18px;position:relative;top:5px"><use xlink:href="#icon-biaoqian"></use></svg><a class="post-meta-categories" href="/categories/%E9%A1%B9%E7%9B%AE/">项目</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><svg class="meta_icon post-meta-icon" style="width:25px;height:25px;position:relative;top:8px"><use xlink:href="#icon-charuword"></use></svg><span class="post-meta-label">字数总计:</span><span class="word-count">3274</span><span class="post-meta-separator">|</span><svg class="meta_icon post-meta-icon" style="width:20px;height:20px;position:relative;top:5px"><use xlink:href="#icon-shizhong"></use></svg><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span></div></div></div><section class="main-hero-waves-area waves-area"><svg class="waves-svg" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto"><defs><path id="gentle-wave" d="M -160 44 c 30 0 58 -18 88 -18 s 58 18 88 18 s 58 -18 88 -18 s 58 18 88 18 v 44 h -352 Z"></path></defs><g class="parallax"><use href="#gentle-wave" x="48" y="0"></use><use href="#gentle-wave" x="48" y="3"></use><use href="#gentle-wave" x="48" y="5"></use><use href="#gentle-wave" x="48" y="7"></use></g></svg></section></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>需求背景：上报模块要解决的两个矛盾</p>
+<p>监控 SDK 有一个特殊约束：它本身不能影响业务，同时又必须尽可能把监控数据送到服务端。如果每一次点击、性能事件、错误都立即发一个请求，会产生大量额外请求；但如果一直缓存在内存里，用户关闭页面或者网络异常时又容易丢数据。所以上报层主要解决两个问题：降低上报成本，以及在异常网络和页面卸载场景下尽可能保证数据送达。</p>
+<p>普通监控数据（错误、性能、行为）的特点是事件数量多、单条数据比较小、不需要每条立即发送、可以接受少量延迟，因此适合用“队列 + 批量 + 定时 Flush”的模式。而录屏数据完全不同：事件量大、单次 Payload 大、对网络和页面生命周期更敏感，而且只在发生异常后才真正有价值，所以更适合“持续录制 + 环形缓冲 + 错误触发截取 + 独立上报”。理解了这个差异，后续的设计就顺理成章了。</p>
+<p>普通数据上报：队列、批量与双阈值触发</p>
+<p>DataReporter 初始化时维护一个队列（this.queue）和定时器（this.timer），所有错误、性能、行为数据最终都会进入 addToQueue(data)，而不是立即发送。连续产生多个事件时不会产生多个 HTTP 请求，而是先进入队列，满足条件时才 Flush。代码中有两个立即 Flush 条件：达到 batchSize（默认 5 条）或达到 maxQueueSize（默认 20 条）；如果没达到，就设置一个 5 秒的定时器等待。<br>这样设计的原因可以对比三种方案。每条事件立即发送实现最简单、实时性最高，但请求次数太多，HTTP Header 等固定开销被重复支付，弱网环境下会产生大量失败请求。固定时间窗口批量发送能大幅减少请求数，实现简单，但数据实时性降低，且事件量突然增大时单次 Payload 会变得很大。而数量阈值加时间阈值（达到 5 条立即 Flush，不足 5 条最多等 5 秒）则兼顾了吞吐和实时性：高流量场景下很快到达阈值立即发送，低流量场景下最多等待固定时间不会一直积压。所以可以总结为“采用数量阈值和时间阈值双触发，兼顾吞吐和实时性”。</p>
+<p>maxQueueSize 的设置则是一个典型的内存保护问题。如果网络完全中断，事件持续产生而队列无法 Flush，没有上限的话 Queue 会无限增长，导致 JS Heap 持续上涨，反过来影响业务。因此设置 maxQueueSize = 20，一旦超过就立即 Flush，即使发送失败也有重试机制，而不是让内存无边界增长。这里体现了一个重要原则：监控数据必须有资源上限，监控系统不能为了保证监控完整性，把业务页面自己的内存打爆。<br>Flush 时的实现细节也值得注意：先通过 const batchData = […this.queue]; this.queue = []; 复制旧队列并清空，然后发送 batchData。这样旧数据在发送过程中，新产生的事件可以继续进入新的空队列，避免发送中的数据和新数据互相污染。本质上是一个 Queue Snapshot 操作，虽然代码简单，但设计思想正确。</p>
+<p>重试策略：指数退避与次数上限<br>发送失败后不能简单地每隔固定时间重试一次，因为如果服务端故障、限流或网络异常，大量用户同时每秒重试会形成 Retry Storm，进一步加重服务端压力。所以代码采用指数退避，延迟时间按 retryDelay * Math.pow(2, count) 增长，默认 retryDelay = 1000ms，即第 1 次重试 1 秒、第 2 次 2 秒、第 3 次 4 秒。指数退避的核心不是把失败请求无限发出去，而是在保证一定送达能力的同时避免故障放大。<br>同时重试必须有次数上限，当前默认最多重试 3 次（retryCount = 3）。没有上限会导致永远重试，内存状态、定时器、请求都无法结束。超过次数后触发 eventBus.emit(‘reporter:report:failed’, …)，表示这条数据进入最终失败状态，不再无意义地占用资源。</p>
+<p>多通道传输：Fetch、Beacon、Image 的角色与降级边界</p>
+<p>传输层支持 Fetch、Beacon、Image 三种方式，但不是简单的“Fetch 失败自动换 Beacon，Beacon 失败换 Image”的固定顺序降级。实际逻辑是：根据配置选择主传输方式，例如配置为 Fetch 时，如果 Fetch 不可用则 fallback 到 Image；配置为 Beacon 时，如果 Beacon 发送失败则 fallback 到 Fetch；配置为 Image 时，发送失败则直接进入重试。网络发送失败后统一进入重试逻辑。<br>Fetch 是默认的主传输手段，因为它支持标准 POST、可以传 JSON、能处理 Promise，业务能力最完整，并且代码中设置了 keepalive: true 以便在页面卸载时尽量发送。但页面卸载时的可靠性不如 Beacon，某些老环境也可能没有 Fetch。<br>Beacon（navigator.sendBeacon）的价值不在于更快，而在于页面离开时依然希望把数据交出去。用户关闭页面、刷新页面、跳转页面是监控场景中常见的数据丢失点，Beacon 恰好能在这个时机发送数据，因此更适合作为页面生命周期结束时的数据发送手段。实现中 Beacon 返回失败时会 fallback 到 Fetch。<br>Image Beacon（new Image(); img.src = url;）是一种非常基础的兜底方案，对浏览器环境要求低，不依赖 Fetch，不需要复杂的 CORS 请求模型，但 Payload 放在 URL 里受长度限制，语义不如 POST，不适合大数据，所以能力最弱，只作为老环境或 Fetch 不可用场景下的最后 fallback。面试时不应该说“Image 最稳定”，而应该说“Image 的能力最弱，我只是把它作为最后兜底”。</p>
+<p>Session Replay：为什么持续录制而不是错误后再录</p>
+<p>Session Replay 的设计首先回答一个问题：如果发生错误后才启动 rrweb，只能录到错误之后的行为，但实际定位问题最需要的是用户错误之前做了什么。例如用户进入订单页、点击编辑、切换地址、请求失败、点击提交、最后 JS Error，真正有价值的可能是错误前 30 秒的操作序列。所以实现采用始终后台录制，环形缓冲只保留最近一段数据。初始化后立即启动 rrweb，持续把事件放进缓冲区。<br>不能一直保存所有录屏的原因很直接：Session Replay 会产生持续增长的事件流，一个用户打开页面 2 小时就会积累大量数据，全部放内存里不合理。所以使用环形缓冲（Ring Buffer），当前实现是 this.events.push(event); if (this.events.length &gt; maxEvents) this.events.shift();。默认 maxReplayDuration = 60 秒，按照大约 15 events/second 估算 maxEvents = 60 × 15 = 900。它的核心不是“用了一个环形缓冲区”，而是“持续录屏，但必须把内存占用限制在固定上限内，所以采用固定窗口的滑动缓存”。<br>错误发生时，代码会记录 this.lastErrorTime = Date.now()、this.errorIndex = this.events.length 并递增 pendingErrorCount，也就是在事件流中标记错误位置，然后不是立即上传，而是继续录制，等待 replayAfterError（默认 10 秒）后开始截取。这样既能拿到错误前 30 秒，又能拿到错误后 10 秒，因为很多 Bug 的现象在错误后还会继续演变。默认配置 replayBeforeError = 30、replayAfterError = 10 形成了完整的时间窗口。<br>截取时不是简单 slice(startIndex)，还会根据 event.timestamp &gt;= cutoffTime 进行二次过滤。原因在于事件数量只是估算，rrweb 每秒产生的事件数并不完全固定，所以先用事件数量粗筛定位起始位置，再用时间戳校正精确的时间窗口，避免固定 events/s 估算带来的误差。<br>由于环形缓冲会不断移除最老的事件，错误位置的索引需要同步调整。代码中在 shift() 时执行 if (this.errorIndex &gt; 0) this.errorIndex—;，如果错误位置恰好是被删除的第一个事件，errorIndex 会变成 -1，表示错误对应的数据已经滚出缓冲区。这个细节可以证明真的看过源码，而不是只知道 rrweb。<br>录屏的成本与隐私控制：采样、脱敏与独立上报<br>录屏是高成本能力，因此配置了 sessionReplaySampleRate = 0.1，默认只有部分会话启用录屏。与普通监控的高覆盖率不同，Replay 采用低采样，形成“普通监控高覆盖、Session Replay 低采样”的成本控制思路。面试中可以说“录屏是高成本能力，所以我把它作为独立高级能力，通过 feature switch 加 sample rate 双层控制”。<br>隐私是 Session Replay 的另一个核心约束。配置中设置了 maskAllInputs: true，并且 blockSelector = .monitor-block、ignoreClass = monitor-ignore、maskTextSelector = input, textarea, [data-monitor-mask]，意味着输入框、文本域以及带特定属性的元素默认不会被原样记录，敏感区域可以通过 .monitor-block 整体屏蔽。这样避免把密码、表单内容等业务数据直接进入录屏。此外还设置了 recordCanvas: false，因为 Canvas 录制数据量大、性能成本高，且很多场景并不是异常定位的必要信息，默认关闭是用成本换必要性。<br>录屏数据故意绕过 DataReporter 的普通队列，直接发送到 /api/session-replay。原因是普通监控数据每条可能只有几 KB，而 rrweb 的 DOM Snapshot、Mutation、Input、Mouse、Scroll 等事件很容易比普通监控事件大很多。如果混用队列，一个大的 Replay Payload 可能阻塞普通 Error 和 Performance 的 Flush，影响整体上报链路的时效性。所以两者使用不同的数据传输策略：普通数据目标是高吞吐、低开销，采用队列、批量、重试；Replay 目标则是高价值、大 Payload、与错误强关联，采用持续缓冲、错误触发、时间窗口截取、独立 Endpoint、Beacon 优先。<br>页面生命周期兜底<br>普通数据和 Replay 都面临页面突然关闭导致数据丢失的问题。例如错误发生后还有 5 秒的 replayAfterError 等待，但用户立刻关闭页面，setTimeout 回调可能根本来不及执行。因此 SessionReplay 和 DataReporter 都监听 visibilitychange 和 pagehide，页面进入隐藏状态时直接尝试 Flush。Replay 上报时优先使用 sendBeacon，失败再 fetch + keepalive。这样就形成了完整的页面生命周期兜底链路：正常运行通过定时或错误触发上报，页面离开时通过 visibilitychange/pagehide 立即发送，发送方式选择 Beacon 或 Fetch keepalive。</p>
+<p>面试讲述思路与简历建议</p>
+<p>面试时不要一上来就罗列“批量队列、指数退避、多通道降级”，而应该从需求背景出发，逐步推导设计决策。<br>首先说明监控 SDK 上报的核心矛盾：既要降低请求开销，又要在页面卸载和网络异常时保证送达。然后将问题拆成普通数据和录屏数据两类，分别讨论。普通数据采用队列加批量，用数量和时间双阈值触发 Flush；失败重试采用指数退避并限制次数，避免 Retry Storm；传输层根据配置选择 Fetch、Beacon 或 Image，并在能力不可用或发送失败时进行合理的 fallback。录屏数据则采用持续录制加环形缓冲，始终保留最近一段时间，错误发生时标记位置，继续录制几秒后截取错误前后的时间窗口，独立上报，并通过采样、输入掩码、敏感元素屏蔽和 Canvas 关闭来控制成本和隐私。最后提到页面卸载时通过 visibilitychange/pagehide 配合 Beacon 和 Fetch keepalive 兜底<br>让每个技术点都能对应一个“为什么”：批量队列和双阈值讲吞吐与实时性，指数退避讲 Retry Storm，多通道传输讲 Fetch/Beacon/Image 的 trade-off，持续录制和固定容量缓冲区讲为什么不是错误后才录，独立上报讲为什么 Replay 不进入普通 Reporter，生命周期兜底讲 visibilitychange、pagehide、sendBeacon、keepalive。准备充分的话，面试官可以从这一个 bullet 连续问出 HTTP、浏览器生命周期、事件队列、重试策略、性能、内存管理、隐私、安全、SDK 架构一整套问题。</p>
+</article><div class="post-copyright"><div class="post-copyright__title"><span class="post-copyright-info"><h>SDK难点：数据上报</h></span></div><div class="post-copyright__type"><span class="post-copyright-info"><a href="https://www.xingandling.top/posts/d1e346fb.html">https://www.xingandling.top/posts/d1e346fb.html</a></span></div><div class="post-copyright-m"><div class="post-copyright-m-info"><div class="post-copyright-a"><h>作者</h><div class="post-copyright-cc-info"><h>Ling521-0</h></div></div><div class="post-copyright-c"><h>发布于</h><div class="post-copyright-cc-info"><h>2026-11-06</h></div></div><div class="post-copyright-u"><h>更新于</h><div class="post-copyright-cc-info"><h>2026-11-06</h></div></div><div class="post-copyright-c"><h>许可协议</h><div class="post-copyright-cc-info"><a class="icon" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a><a rel="noopener" target="_blank" title="CC BY-NC-SA 4.0" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></div></div></div></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E9%A1%B9%E7%9B%AE/"><div class="tags-punctuation"><svg class="faa-tada icon" style="height:1.1em;width:1.1em;fill:currentColor;position:relative;top:2px;margin-right:3px" aria-hidden="true"><use xlink:href="#icon-sekuaibiaoqian"></use></svg></div>项目</a></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/posts/forward-at-19.html"><img class="next-cover" src="/assets/posts/2026-10-13-forward-cover.png" onerror="onerror=null;src='/assets/r2.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">19岁，向前走</div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="waline-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="author_top is-center"><div class="card-info-avatar"><div class="avatar-img"><img src="/assets/avatar.jpg" onerror="this.onerror=null;this.src='/assets/r1.jpg'" alt="avatar"/></div><div class="author-status-box"><div class="author-status"><g-emoji class="g-emoji" alias="palm_tree" fallback-src="https://lskypro.acozycotage.net/LightPicture/2022/12/fe1dc0402e623096.jpg">🐟</g-emoji><span>认真摸鱼中</span></div></div></div><b><div class="author-info__name">Ling521-0</div></b><div class="author-info__description">你好，这里是夏幻灵</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">19</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">45</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">18</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Ling521-0" title="前往作者的Github"><span>🛴前往小窝</span><i class="faa-passing animated" style="padding-left:20px;display:inline-block;vertical-align:middle;"><svg class="icon" style="height:28px;width:28px;fill:currentColor;position:relative;top:5px"><use xlink:href="#icon-xiaoqiche"></use></svg></i></a><div class="card-info-social-icons is-center"><a class="social-icon faa-parent animated-hover" href="/assets/HXWechat.jpg" target="_blank" title="微信"><i class="fa-fw fab fa-weixin faa-tada"></i></a><a class="social-icon faa-parent animated-hover" href="https://res.abeim.cn/api/qq/?qq=3272473672" target="_blank" title="QQ"><i class="fa-fw fab fa-qq faa-tada"></i></a><a class="social-icon faa-parent animated-hover" href="https://space.bilibili.com/630835275?spm_id_from=333.1007.0.0" target="_blank" title="B站"><i class="fa-fw fab fa-bilibili faa-tada"></i></a><a class="social-icon faa-parent animated-hover" href="mailto:3272473672@qq.com" target="_blank" title="QQ邮箱"><i class="fa-fw fas fa-envelope faa-tada"></i></a><a class="social-icon faa-parent animated-hover" href="https://leetcode.cn/" target="_blank" title="力扣"><i class="fa-fw fas fa-code faa-tada"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><a class="faa-parent animated-hover"><svg class="faa-tada icon" style="height:25px;width:25px;fill:currentColor;position:relative;top:5px" aria-hidden="true"><use xlink:href="#icon-gonggao"></use></svg></a><span style="font-weight:bold">公告栏</span></div><div class="announcement_content"><center><b>--- 主域名 ---<br><a target="_blank" rel="noopener" href="https://xingandling.top" title="此线路部署于Vercel" class="anno_content"><font color="#5ea6e5">xingandling.top</font></a><br>--- 备用域名 ---<br><a target="_blank" rel="noopener" href="https://Ling521-0.github.io" title="此线路部署于GitHub Pages" class="anno_content"><font color="#5ea6e5">Ling521-0.github.io</font></a></b></center></div><div id="welcome-info"></div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/d1e346fb.html" title="SDK难点：数据上报"><img src="/assets/uploads/2026/11/1793944965505-ezgif-4454147ffd423d.gif" onerror="this.onerror=null;this.src='/assets/r2.jpg'" alt="SDK难点：数据上报"/></a><div class="content"><a class="title" href="/posts/d1e346fb.html" title="SDK难点：数据上报">SDK难点：数据上报</a><time datetime="2026-11-06T06:02:00.000Z" title="发表于 2026-11-06 14:02:00">2026-11-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/forward-at-19.html" title="19岁，向前走"><img src="/assets/posts/2026-10-13-forward-cover.png" onerror="this.onerror=null;this.src='/assets/r2.jpg'" alt="19岁，向前走"/></a><div class="content"><a class="title" href="/posts/forward-at-19.html" title="19岁，向前走">19岁，向前走</a><time datetime="2026-10-13T12:54:00.000Z" title="发表于 2026-10-13 20:54:00">2026-10-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/132wwdw0.html" title="对AI的理解"><img src="/assets/0021.jpg" onerror="this.onerror=null;this.src='/assets/r2.jpg'" alt="对AI的理解"/></a><div class="content"><a class="title" href="/posts/132wwdw0.html" title="对AI的理解">对AI的理解</a><time datetime="2026-09-15T09:37:02.000Z" title="发表于 2026-09-15 17:37:02">2026-09-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/132wwdw7.html" title="SDK面试问题"><img src="/assets/sl1.jpg" onerror="this.onerror=null;this.src='/assets/r2.jpg'" alt="SDK面试问题"/></a><div class="content"><a class="title" href="/posts/132wwdw7.html" title="SDK面试问题">SDK面试问题</a><time datetime="2026-09-14T09:37:00.000Z" title="发表于 2026-09-14 17:37:00">2026-09-14</time></div></div></div></div></div></div></main><footer id="footer" style="background-color: transparent;"><div id="footer-wrap"><div id="ft"><div class="ft-item-1"><div class="t-top"><div class="t-t-l"><p class="ft-t t-l-t">想说的话🧬</p><div class="bg-ad"><div>走下去 一定要走下去</div><div class="btn-xz-box"><a class="btn-xz" href="https://stellarium-web.org/" target="_blank" rel="noopener noreferrer">点击开启星辰之旅</a></div></div></div><div class="t-t-r"><p class="ft-t t-l-t">猜你想看💡</p><ul class="ft-links"><li><a href="/archives/">文章归档</a><a href="/categories/">文章分类</a></li><li><a href="/tags/">文章标签</a><a href="/life/games/">游戏记录</a></li><li><a href="/life/books/">小说书架</a><a href="/personal/bb/">我的唠叨</a></li><li><a href="/site/time/">建设进程</a><a href="/site/census/">网站统计</a></li></ul></div></div></div><div class="ft-item-2"><p class="ft-t">推荐友链⌛</p><div class="ft-img-group"><div class="img-group-item"></div></div></div></div><div class="copyright"><span><b>&copy;2022-2026</b></span><span><b>&nbsp;&nbsp;By Ling521-0</b></span></div><div id="workboard"></div><p id="ghbdages"><a class="github-badge" target="_blank" href="https://icp.gov.moe/?keyword=20230913" style="margin-inline:5px" title="本站已加入萌ICP豪华套餐，萌ICP备20230913号"><img src="https://img.u7u7.top/blogbackground/20230913.svg" alt=""/></a></p></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><a class="icon-V hidden" onclick="switchNightMode()" title="浅色和深色模式转换"><svg width="25" height="25" viewBox="0 0 1024 1024"><use id="modeicon" xlink:href="#icon-moon"></use></svg></a><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button><button class="share" type="button" title="右键模式" onclick="changeMouseMode()"><i class="fas fa-mouse"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog right_side"></i></button><button class="share" type="button" title="分享链接" onclick="share()"><i class="fas fa-share-nodes"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i><span id="percent">0<span>%</span></span></button><button id="go-down" type="button" title="直达底部" onclick="btf.scrollToDest(document.body.scrollHeight, 500)"><i class="fas fa-arrow-down"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div class="js-pjax" id="rightMenu"><div class="rightMenu-group rightMenu-small"><a class="rightMenu-item" href="javascript:window.history.back();"><i class="fa fa-arrow-left"></i></a><a class="rightMenu-item" href="javascript:window.history.forward();"><i class="fa fa-arrow-right"></i></a><a class="rightMenu-item" href="javascript:window.location.reload();"><i class="fa fa-refresh"></i></a><a class="rightMenu-item" href="javascript:rmf.scrollToTop();"><i class="fa fa-arrow-up"></i></a></div><div class="rightMenu-group rightMenu-line hide" id="menu-text"><a class="rightMenu-item" href="javascript:rmf.copySelect();"><i class="fa fa-copy"></i><span>复制</span></a><a class="rightMenu-item" href="javascript:window.open(&quot;https://www.baidu.com/s?wd=&quot;+window.getSelection().toString());window.location.reload();"><i class="fa fa-search"></i><span>百度搜索</span></a></div><div class="rightMenu-group rightMenu-line hide" id="menu-too"><a class="rightMenu-item" href="javascript:window.open(window.getSelection().toString());window.location.reload();"><i class="fa fa-link"></i><span>转到链接</span></a></div><div class="rightMenu-group rightMenu-line hide" id="menu-paste"><a class="rightMenu-item" href="javascript:rmf.paste()"><i class="fa fa-copy"></i><span>粘贴</span></a></div><div class="rightMenu-group rightMenu-line hide" id="menu-post"><a class="rightMenu-item" href="#post-comment"><i class="fas fa-comment"></i><span>空降评论</span></a><a class="rightMenu-item" href="javascript:rmf.copyWordsLink()"><i class="fa fa-link"></i><span>复制本文地址</span></a></div><div class="rightMenu-group rightMenu-line hide" id="menu-to"><a class="rightMenu-item" href="javascript:rmf.openWithNewTab()"><i class="fa fa-window-restore"></i><span>新窗口打开</span></a><a class="rightMenu-item" id="menu-too" href="javascript:rmf.open()"><i class="fa fa-link"></i><span>转到链接</span></a><a class="rightMenu-item" href="javascript:rmf.copyLink()"><i class="fa fa-copy"></i><span>复制链接</span></a></div><div class="rightMenu-group rightMenu-line hide" id="menu-img"><a class="rightMenu-item" href="javascript:rmf.saveAs()"><i class="fa fa-download"></i><span>保存图片</span></a><a class="rightMenu-item" href="javascript:rmf.openWithNewTab()"><i class="fa fa-window-restore"></i><span>在新窗口打开</span></a><a class="rightMenu-item" href="javascript:rmf.copyLink()"><i class="fa fa-copy"></i><span>复制图片链接</span></a></div><div class="rightMenu-group rightMenu-line"><a class="rightMenu-item" href="javascript:randomPost()"><i class="fa fa-paper-plane"></i><span>随便逛逛</span></a><a class="rightMenu-item" href="javascript:switchNightMode();"><i class="fa fa-moon"></i><span>昼夜切换</span></a><a class="rightMenu-item" href="javascript:toggleWinbox();"><i class="fas fa-cog"></i><span>美化设置</span></a><a class="rightMenu-item" href="javascript:rmf.fullScreen();"><i class="fas fa-expand"></i><span>切换全屏</span></a><a class="rightMenu-item" href="javascript:window.print();"><i class="fa-solid fa-print"></i><span>打印页面</span></a></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.staticfile.org/fancyapps-ui/4.0.31/fancybox.umd.min.js" integrity="sha384-Hw0brlbO7wY8FJPK3LTrJmH+YRkS9McwUWtsrQ4H7Xk5s5RsYpQDmZclTZrBmY6a" crossorigin="anonymous" async onload="window.refreshLightbox &amp;&amp; window.refreshLightbox()"></script><script src="/js/search/local-search.js"></script><script async="async">var preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+
+  }
+}
+window.addEventListener('load',preloader.endLoading())
+setTimeout(function(){preloader.endLoading();}, 5000);
+document.getElementById('loading-box').addEventListener('click',()=> {preloader.endLoading()})</script><div class="js-pjax"><script>function loadWaline () {
+  const mount = document.getElementById('waline-wrap')
+  if (!mount || mount.dataset.walineState) return
+  mount.dataset.walineState = 'loading'
+  const navigationVersion = window.walineNavigationVersion || 0
+  const useSiteProxy = /(^|\.)xingandling\.top$/.test(window.location.hostname) || window.location.hostname === 'ling-github-io.vercel.app'
+  const walineServerURL = useSiteProxy ? `${window.location.origin}/_waline` : 'https://waline-comments-peach-eight.vercel.app'
+  const controller = new AbortController()
+  window.walineLoadController = controller
+  const timeout = setTimeout(() => controller.abort(), 12000)
+
+  if (!document.querySelector('link[data-waline-style]')) {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = '/vendor/waline/waline.css'
+    link.dataset.walineStyle = ''
+    document.head.appendChild(link)
+  }
+
+  const checkURL = new URL(`${walineServerURL}/api/comment`)
+  checkURL.searchParams.set('path', window.location.pathname)
+  checkURL.searchParams.set('page', '1')
+  checkURL.searchParams.set('pageSize', '1')
+  checkURL.searchParams.set('sortBy', 'insertedAt_desc')
+  checkURL.searchParams.set('lang', 'zh-CN')
+
+  fetch(checkURL, { signal: controller.signal, cache: 'no-store' }).then(response => {
+    if (!response.ok) throw new Error(`Waline API returned ${response.status}`)
+    return response.json()
+  }).then(result => {
+    if (!result || !Object.hasOwn(result, 'data')) throw new Error('Waline API returned an invalid response')
+    return import('/vendor/waline/waline.js')
+  }).then(({ init }) => {
+    if (!mount.isConnected || navigationVersion !== (window.walineNavigationVersion || 0)) return
+    window.walineInstance?.destroy()
+    window.walineInstance = init(Object.assign({
+      el: mount,
+      serverURL: walineServerURL,
+      pageview: false,
+      dark: 'html[data-theme="dark"]',
+      path: window.location.pathname,
+      comment: false,
+    }, null))
+    mount.dataset.walineState = 'ready'
+  }).catch(error => {
+    console.error('Waline failed to load:', error)
+    if (!mount.isConnected || navigationVersion !== (window.walineNavigationVersion || 0)) return
+    delete mount.dataset.walineState
+    const retry = document.createElement('button')
+    retry.type = 'button'
+    retry.className = 'waline-retry'
+    retry.textContent = '评论区加载失败，点击重试'
+    retry.addEventListener('click', () => {
+      retry.remove()
+      loadWaline()
+    })
+    mount.replaceChildren(retry)
+  }).finally(() => {
+    clearTimeout(timeout)
+    if (window.walineLoadController === controller) window.walineLoadController = null
+  })
+}
+
+if (!window.walinePjaxCleanupAdded) {
+  document.addEventListener('pjax:send', () => {
+    window.walineNavigationVersion = (window.walineNavigationVersion || 0) + 1
+    window.walineLoadController?.abort()
+    window.walineInstance?.destroy()
+    window.walineInstance = null
+  })
+  window.walinePjaxCleanupAdded = true
+}
+
+if ('Waline' === 'Waline' || !true) {
+  if (true) btf.loadComment(document.getElementById('waline-wrap'),loadWaline)
+  else setTimeout(loadWaline, 0)
+} else {
+  function loadOtherComment () {
+    loadWaline()
+  }
+}</script></div><script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js" integrity="sha384-Ft/vb48LwsAEtgltj7o+6vtS2esTU9PCpDqcXs4OCVQFZu5BqprHtUCZ4kjK+bpE" crossorigin="anonymous"></script><script src="https://cdn.staticfile.org/vue/2.6.14/vue.min.js" integrity="sha384-ULpZhk1pvhc/UK5ktA9kwb2guy9ovNSTyxPNHANnA35YjBQgdwI+AhLkixDvdlw4" crossorigin="anonymous"></script><script src="https://cdn.staticfile.org/element-ui/2.15.6/index.js" integrity="sha384-MVC1i+8iGvjPiW/Vk0D2u6RtKGKorhRAW++fobz86eih0TQFpwHh390ouXvZc5Dr" crossorigin="anonymous"></script><script defer src="/vendor/iconfont/font_3586335_hsivh70x0fm.js"></script><script defer src="/vendor/iconfont/font_3636804_gr02jmjr3y9.js"></script><script defer src="/vendor/iconfont/font_3612150_kfv55xn3u2g.js"></script><canvas id="universe"></canvas><canvas id="snow"></canvas><script defer src="/js/fomal.js"></script><script defer src="/js/floating-player.js"></script><script src="https://cdn.staticfile.org/pjax/0.2.8/pjax.min.js" integrity="sha384-PX09VH9WyqnmDCYeEn/EPioJLSHIfqN8Z6j9jG19dDOMYisDt4wxZ0U/yGXbNo6h" crossorigin="anonymous"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show","#web_bg",".js-pjax","#bibi","body > title","#app","#tag-echarts","#posts-echart","#categories-echarts"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: true,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.tocScrollFn && window.removeEventListener('scroll', window.tocScrollFn)
+  window.scrollCollect && window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  document.getElementById('rightside').style.cssText = "opacity: ''; transform: ''"
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+  typeof disqusjs === 'object' && disqusjs.destroy()
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script></div><!-- hexo injector body_end start --> <script data-pjax>if(document.getElementById('recent-posts') && (location.pathname ==='/'|| '/' ==='all')){
+    var parent = document.getElementById('recent-posts');
+    var child = '<div class="recent-post-item" style="width:100%;height: auto"><div id="catalog_magnet"><div class="magnet_item"><a class="magnet_link" href="https://www.xingandling.top/categories/技术/"><div class="magnet_link_context" style=""><span style="font-weight:500;flex:1">🧠 技术笔记 (4)</span><span style="padding:0px 4px;border-radius: 8px;"><i class="fas fa-arrow-circle-right"></i></span></div></a></div><div class="magnet_item"><a class="magnet_link" href="https://www.xingandling.top/categories/求职/"><div class="magnet_link_context" style=""><span style="font-weight:500;flex:1">💼 求职记录 (7)</span><span style="padding:0px 4px;border-radius: 8px;"><i class="fas fa-arrow-circle-right"></i></span></div></a></div><div class="magnet_item"><a class="magnet_link" href="https://www.xingandling.top/categories/随笔/"><div class="magnet_link_context" style=""><span style="font-weight:500;flex:1">✍️ 随笔与思考 (4)</span><span style="padding:0px 4px;border-radius: 8px;"><i class="fas fa-arrow-circle-right"></i></span></div></a></div><div class="magnet_item"><a class="magnet_link" href="https://www.xingandling.top/categories/创作/"><div class="magnet_link_context" style=""><span style="font-weight:500;flex:1">📚 创作与阅读 (2)</span><span style="padding:0px 4px;border-radius: 8px;"><i class="fas fa-arrow-circle-right"></i></span></div></a></div><div class="magnet_item"><a class="magnet_link" href="https://www.xingandling.top/categories/站点/"><div class="magnet_link_context" style=""><span style="font-weight:500;flex:1">⚙️ 建站手记 (1)</span><span style="padding:0px 4px;border-radius: 8px;"><i class="fas fa-arrow-circle-right"></i></span></div></a></div><div class="magnet_item" style="visibility: hidden"></div><a class="magnet_link_more"  href="https://www.xingandling.top/categories/" style="flex:1;text-align: center;margin-bottom: 10px;">查看更多...</a></div></div>';
+    console.log('已挂载magnet')
+    parent.insertAdjacentHTML("afterbegin",child)}
+     </script><style>#catalog_magnet{flex-wrap: wrap;display: flex;width:100%;justify-content:space-between;padding: 10px 10px 0 10px;align-content: flex-start;}.magnet_item{flex-basis: calc(33.333333333333336% - 5px);background: #202023;margin-bottom: 10px;border-radius: 8px;transition: all 0.2s ease-in-out;}.magnet_item:hover{background: #2c2c31}.magnet_link_more{color:#555}.magnet_link{color:#f3eadc}.magnet_link:hover{color:#ffffff}@media screen and (max-width: 600px) {.magnet_item {flex-basis: 100%;}}.magnet_link_context{display:flex;padding: 10px;font-size:16px;transition: all 0.2s ease-in-out;}.magnet_link_context:hover{padding: 10px 20px;}</style>
+    <style></style><script data-pjax>
+  function butterfly_swiper_injector_config(){
+    var parent_div_git = document.getElementById('recent-posts');
+    var item_html = '<div class="recent-post-item" style="height: auto;width: 100%"><div class="blog-slider swiper-container-fade swiper-container-horizontal" id="swiper_container"><div class="blog-slider__wrp swiper-wrapper" style="transition-duration: 0ms;"><div class="blog-slider__item swiper-slide" style="width: 750px; opacity: 1; transform: translate3d(0px, 0px, 0px); transition-duration: 0ms;"><a class="blog-slider__img" onclick="pjax.loadUrl(&quot;posts/634d7da1.html&quot;);" href="javascript:void(0);" alt=""><img width="48" height="48" src="/assets/ba4.jpg" alt="" onerror="this.src=/assets/ba4.jpg; this.onerror = null;"/></a><div class="blog-slider__content"><span class="blog-slider__code">2026-06-22</span><a class="blog-slider__title" onclick="pjax.loadUrl(&quot;posts/634d7da1.html&quot;);" href="javascript:void(0);" alt="">B站大会员前端开发面经</a><div class="blog-slider__text">面经</div><a class="blog-slider__button" onclick="pjax.loadUrl(&quot;posts/634d7da1.html&quot;);" href="javascript:void(0);" alt="">详情       </a></div></div><div class="blog-slider__item swiper-slide" style="width: 750px; opacity: 1; transform: translate3d(0px, 0px, 0px); transition-duration: 0ms;"><a class="blog-slider__img" onclick="pjax.loadUrl(&quot;posts/4a17b123.html&quot;);" href="javascript:void(0);" alt=""><img width="48" height="48" src="/assets/klt.jpg" alt="" onerror="this.src=/assets/ba4.jpg; this.onerror = null;"/></a><div class="blog-slider__content"><span class="blog-slider__code">2026-06-11</span><a class="blog-slider__title" onclick="pjax.loadUrl(&quot;posts/4a17b123.html&quot;);" href="javascript:void(0);" alt="">库洛服务端一面</a><div class="blog-slider__text">再怎么看我也不知道怎么描述它的啦！</div><a class="blog-slider__button" onclick="pjax.loadUrl(&quot;posts/4a17b123.html&quot;);" href="javascript:void(0);" alt="">详情       </a></div></div><div class="blog-slider__item swiper-slide" style="width: 750px; opacity: 1; transform: translate3d(0px, 0px, 0px); transition-duration: 0ms;"><a class="blog-slider__img" onclick="pjax.loadUrl(&quot;posts/634d7da2.html&quot;);" href="javascript:void(0);" alt=""><img width="48" height="48" src="/assets/sar.jpg" alt="" onerror="this.src=/assets/ba4.jpg; this.onerror = null;"/></a><div class="blog-slider__content"><span class="blog-slider__code">2026-06-22</span><a class="blog-slider__title" onclick="pjax.loadUrl(&quot;posts/634d7da2.html&quot;);" href="javascript:void(0);" alt="">如何参与开源</a><div class="blog-slider__text">再怎么看我也不知道怎么描述它的啦！</div><a class="blog-slider__button" onclick="pjax.loadUrl(&quot;posts/634d7da2.html&quot;);" href="javascript:void(0);" alt="">详情       </a></div></div></div><div class="blog-slider__pagination swiper-pagination-clickable swiper-pagination-bullets"></div></div></div>';
+    console.log('已挂载butterfly_swiper')
+    parent_div_git.insertAdjacentHTML("afterbegin",item_html)
+    }
+  var elist = 'undefined'.split(',');
+  var cpage = location.pathname;
+  var epage = 'all';
+  var flag = 0;
+
+  for (var i=0;i<elist.length;i++){
+    if (cpage.includes(elist[i])){
+      flag++;
+    }
+  }
+
+  if ((epage ==='all')&&(flag == 0)){
+    butterfly_swiper_injector_config();
+  }
+  else if (epage === cpage){
+    butterfly_swiper_injector_config();
+  }
+  </script><script defer src="/vendor/swiper/swiper.min.js?v=4.1.6-local.1"></script><script defer data-pjax src="/vendor/swiper/swiper_init.js?v=4.1.6-local.1"></script><!-- hexo injector body_end end --><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false});</script></body></html>
